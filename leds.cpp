@@ -1,6 +1,14 @@
 #include "leds.h"
 #include <FastLED.h>
 
+#ifdef DEBUG
+#define DEBUG_PRINT(...) Serial.print(__VA_ARGS__)
+#define DEBUG_PRINTLN(...) Serial.println(__VA_ARGS__)
+#else
+#define DEBUG_PRINT(...)
+#define DEBUG_PRINTLN(...)
+#endif
+
 namespace leds {
 static const int NUM_LEDS = 30;
 static const int DATA_PIN = 1; // D1, GPIO5
@@ -32,36 +40,28 @@ uint32_t sum = 0;
 uint32_t startTime = 0;
 
 void print(CHSV c) {
-  Serial.print("HSV("); Serial.print(c.h); Serial.print(","); Serial.print(c.s); Serial.print(","); Serial.print(c.v); Serial.print(")");
+  DEBUG_PRINT("HSV("); DEBUG_PRINT(c.h); DEBUG_PRINT(","); DEBUG_PRINT(c.s); DEBUG_PRINT(","); DEBUG_PRINT(c.v); DEBUG_PRINT(")");
 }
 
   void hexPrint(uint8_t i) {
-    Serial.print(i>>4, HEX); Serial.print(i & 0xf, HEX);
+    DEBUG_PRINT(i>>4, HEX); DEBUG_PRINT(i & 0xf, HEX);
   }
-
-  void hexPrint(uint16_t i) {
-    hexPrint(uint8_t(i>>8)); hexPrint(uint8_t(i & 0xff));
-  }
-
-void print(CRGB16 c) {
-  Serial.print("RGB(0x"); hexPrint(c.r); hexPrint(c.g); hexPrint(c.b); Serial.print(")");
-}
 
 void print(CRGB c) {
-  Serial.print("RGB(0x"); hexPrint(c.r); hexPrint(c.g); hexPrint(c.b); Serial.print(")");
+  DEBUG_PRINT("RGB(0x"); hexPrint(c.r); hexPrint(c.g); hexPrint(c.b); DEBUG_PRINT(")");
 }
 
 void setEndDurations(uint32_t duration) {
   // compute the start time of each segment
   // starting at the last one
-  Serial.print("setEndDurations: "); Serial.println(duration);
+  DEBUG_PRINT("setEndDurations: "); DEBUG_PRINTLN(duration);
   uint32_t end = 0;
   for (int i = 0; i < segments_len; i++) {
-    Serial.print("i "); Serial.println(i);
+    DEBUG_PRINT("i "); DEBUG_PRINTLN(i);
     end += segments[i].time;
-    Serial.print("end "); Serial.println(end);
+    DEBUG_PRINT("end "); DEBUG_PRINTLN(end);
     endDuration[i] = duration*end/sum;
-    Serial.println(endDuration[i]);
+    DEBUG_PRINTLN(endDuration[i]);
   }
 }
 
@@ -69,7 +69,7 @@ void setup() {
   for (int i = 0; i < segments_len; i++) {
     sum += segments[i].time;
   }
-  Serial.print("sum "); Serial.println(sum);
+  DEBUG_PRINT("sum "); DEBUG_PRINTLN(sum);
 
   FastLED.setMaxPowerInVoltsAndMilliamps(5, 4000);
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
@@ -81,35 +81,35 @@ fract8 interpolate8(int x, int a, int b) { // where is x in the range [a..b]?
 }
 
 void print(fract8 f) {
-  Serial.print(f/256.0);
+  DEBUG_PRINT(f/256.0);
 }
 
 void loop() {
   if (startTime == 0) return;
   uint32_t t = millis()-startTime;
-  Serial.print("t "); Serial.print(t);
+  DEBUG_PRINT("t "); DEBUG_PRINT(t);
   while (segmentIndex < segments_len && endDuration[segmentIndex] < t) {
     segmentIndex++;
   };
-  Serial.print(", segmentIndex "); Serial.print(segmentIndex);
+  DEBUG_PRINT(", segmentIndex "); DEBUG_PRINT(segmentIndex);
   CHSV color;
   if (segmentIndex < segments_len) {
     uint32_t start = (segmentIndex == 0 ? 0 : endDuration[segmentIndex -1]);
-    Serial.print(", range ["); Serial.print(start); Serial.print(".."); Serial.print(endDuration[segmentIndex]); Serial.print("]");
-    Serial.print(", pct "); print(interpolate8(t, start, endDuration[segmentIndex]));
+    DEBUG_PRINT(", range ["); DEBUG_PRINT(start); DEBUG_PRINT(".."); DEBUG_PRINT(endDuration[segmentIndex]); DEBUG_PRINT("]");
+    DEBUG_PRINT(", pct "); print(interpolate8(t, start, endDuration[segmentIndex]));
     CHSV startColor  = (segmentIndex == 0 ? CHSV(0,0,0) : segments[segmentIndex-1].color);
-    Serial.print(", startColor "); print(startColor);
-    Serial.print(", endColor "); print(segments[segmentIndex].color);
+    DEBUG_PRINT(", startColor "); print(startColor);
+    DEBUG_PRINT(", endColor "); print(segments[segmentIndex].color);
     color = blend(startColor, segments[segmentIndex].color, interpolate8(t, start, endDuration[segmentIndex]));
   } else {
     color = segments[segments_len-1].color;
     stop(); // all done
   }
-  Serial.print(", color "); print(color); Serial.print(" "); print(CRGB(color));
+  DEBUG_PRINT(", color "); print(color); DEBUG_PRINT(" "); print(CRGB(color));
   fill_solid (leds, NUM_LEDS, color);
   FastLED.show();
   FastLED.delay(50);
-  Serial.println();
+  DEBUG_PRINTLN();
 }
 
 void start(int duration) {

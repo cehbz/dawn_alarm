@@ -20,6 +20,16 @@ IPAddress timeServer(132, 163, 4, 101); // time-a.timefreq.bldrdoc.gov
 //static const int timeZone = -7;  // Pacific Daylight Time (USA)
 static const int timeZone = 10; // Eastern Standard Time (AU) [Melbourne]
 
+void blink(int count) {
+  for (int i = 0; i < count; i++) {
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(100);
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(100);
+  }
+  delay(500);
+}
+
   void printDigits(char *sep, int digits){
   // utility for digital clock display: prints preceding colon and leading 0
   Serial.print(sep);
@@ -81,6 +91,7 @@ time_t getNtpTime()
       int size = Udp.parsePacket();
       if (size >= NTP_PACKET_SIZE) {
         Serial.println("Receive NTP Response");
+        blink(3);
         Udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
         static const unsigned long secsFrom1900ToUnixEpoch = 2208988800UL;
         unsigned long secsSince1900;
@@ -98,15 +109,18 @@ time_t getNtpTime()
 
 void setup()
 {
+  pinMode(LED_BUILTIN, OUTPUT);
   Serial.print("Connecting to ");
   Serial.println(ssid);
   WiFi.begin(ssid, pass);
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
+    blink(1);
     Serial.print(".");
   }
 
+  blink(2);
   Serial.print("IP number assigned by DHCP is ");
   Serial.println(WiFi.localIP());
   WiFi.hostByName(ntpServerName, timeServer);
