@@ -14,7 +14,7 @@ void setup() {
   ntp::setup();
   leds::setup();
   // Alarm.alarmRepeat(6,0,0, MorningAlarm);
-  Alarm.alarmOnce(hour(now()), minute(now()), second(now())+10, MorningAlarm);
+  Alarm.alarmOnce(hour(now()), minute(now()), second(now())+5, MorningAlarm);
 }
 
 void loop() {

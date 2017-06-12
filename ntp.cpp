@@ -20,9 +20,9 @@ IPAddress timeServer(132, 163, 4, 101); // time-a.timefreq.bldrdoc.gov
 //static const int timeZone = -7;  // Pacific Daylight Time (USA)
 static const int timeZone = 10; // Eastern Standard Time (AU) [Melbourne]
 
-void printDigits(int digits){
+  void printDigits(char *sep, int digits){
   // utility for digital clock display: prints preceding colon and leading 0
-  Serial.print(":");
+  Serial.print(sep);
   if(digits < 10)
     Serial.print('0');
   Serial.print(digits);
@@ -30,15 +30,14 @@ void printDigits(int digits){
 
 void digitalClockDisplay(){
   // digital clock display of the time
-  Serial.print(hour());
-  printDigits(minute());
-  printDigits(second());
-  Serial.print(" ");
-  Serial.print(day());
-  Serial.print(".");
-  Serial.print(month());
-  Serial.print(".");
-  Serial.print(year());
+  printDigits("", year());
+  printDigits("-", month());
+  printDigits("-", day());
+  printDigits("T", hour());
+  printDigits(":", minute());
+  printDigits(":", second());
+  printDigits(timeZone>=0?"+":"-", abs(timeZone));
+  printDigits(":", 0);
   Serial.println();
 }
 

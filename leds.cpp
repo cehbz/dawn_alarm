@@ -24,6 +24,7 @@ static const CHSVAtTime segments[] = {
   CHSVAtTime(2, CHSV(HUE_YELLOW, 128, 192)),
   CHSVAtTime(1, CHSV(HUE_YELLOW, 64, 255)),
 };
+
 static const int segments_len = sizeof(segments)/sizeof(segments[0]);
 uint32_t endDuration[segments_len];
 int segmentIndex = 0;
@@ -34,8 +35,20 @@ void print(CHSV c) {
   Serial.print("HSV("); Serial.print(c.h); Serial.print(","); Serial.print(c.s); Serial.print(","); Serial.print(c.v); Serial.print(")");
 }
 
+  void hexPrint(uint8_t i) {
+    Serial.print(i>>4, HEX); Serial.print(i & 0xf, HEX);
+  }
+
+  void hexPrint(uint16_t i) {
+    hexPrint(uint8_t(i>>8)); hexPrint(uint8_t(i & 0xff));
+  }
+
+void print(CRGB16 c) {
+  Serial.print("RGB(0x"); hexPrint(c.r); hexPrint(c.g); hexPrint(c.b); Serial.print(")");
+}
+
 void print(CRGB c) {
-  Serial.print("RGB("); Serial.print(c.r); Serial.print(","); Serial.print(c.g); Serial.print(","); Serial.print(c.b); Serial.print(")");
+  Serial.print("RGB(0x"); hexPrint(c.r); hexPrint(c.g); hexPrint(c.b); Serial.print(")");
 }
 
 void setEndDurations(uint32_t duration) {
