@@ -6,7 +6,7 @@ namespace ntp {
 
 const char ssid[] = "Little Palmerston 2.4G";  //  your network SSID (name)
 const char pass[] = "littlepalmerstonst";       // your network password
-const char ntpServerName[] = "pool.ntp.org";
+const char NTPServerName[] = "pool.ntp.org";
 
 // NTP Servers:
 IPAddress timeServer(132, 163, 4, 101); // time-a.timefreq.bldrdoc.gov
@@ -80,7 +80,7 @@ void sendNTPpacket(IPAddress &address)
   Udp.endPacket();
 }
 
-time_t getNtpTime()
+time_t getNTPTime()
 {
   for (;;) { // keep trying till we get a time
     while (Udp.parsePacket() > 0) ; // discard any previously received packets
@@ -123,9 +123,9 @@ void setup()
   blink(2);
   Serial.print("IP number assigned by DHCP is ");
   Serial.println(WiFi.localIP());
-  WiFi.hostByName(ntpServerName, timeServer);
+  WiFi.hostByName(NTPServerName, timeServer);
   Serial.print("NTP server ");
-  Serial.print(ntpServerName);
+  Serial.print(NTPServerName);
   Serial.print(" at IP ");
   Serial.println(timeServer);
   Serial.println("Starting UDP");
@@ -134,7 +134,7 @@ void setup()
   Serial.println(Udp.localPort());
   Serial.println("waiting for sync");
   setSyncInterval(1*SECS_PER_HOUR);
-  setSyncProvider(getNtpTime);
+  setSyncProvider(getNTPTime);
 }
 
 time_t prevDisplay = 0; // when the digital clock was displayed
