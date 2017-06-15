@@ -1,36 +1,39 @@
+#include "dawn_alarm.h"
 #include "leds.h"
 #include <FastLED.h>
-
-#ifdef DEBUG
-#define DEBUG_PRINT(...) Serial.print(__VA_ARGS__)
-#define DEBUG_PRINTLN(...) Serial.println(__VA_ARGS__)
-#else
-#define DEBUG_PRINT(...)
-#define DEBUG_PRINTLN(...)
-#endif
 
 namespace leds {
 static const int NUM_LEDS = 30;
 static const int DATA_PIN = 1; // D1, GPIO5
 CRGB leds[NUM_LEDS];
 
-class CHSVAtTime {
+class ColorAtTime {
 public:
   uint32_t time;
-  CHSV color;
+  CRGB color;
 
-  CHSVAtTime(uint32_t t, CHSV c) : time{t}, color{c} {}
+  ColorAtTime(uint32_t t, CHSV c) : time{t}, color{CRGB(c)} {}
+  ColorAtTime(uint32_t t, CRGB c) : time{t}, color{c} {}
 };
 
-static const CHSVAtTime segments[] = {
-  CHSVAtTime(128, CHSV(HUE_PURPLE, 64, 16)),
-  CHSVAtTime(64, CHSV(HUE_BLUE, 96, 32)),
-  CHSVAtTime(32, CHSV(HUE_BLUE, 128, 64)),
-  CHSVAtTime(16, CHSV(HUE_PINK, 192, 96)),
-  CHSVAtTime(8, CHSV(HUE_RED, 255, 128)),
-  CHSVAtTime(4, CHSV(HUE_ORANGE, 192, 160)),
-  CHSVAtTime(2, CHSV(HUE_YELLOW, 128, 192)),
-  CHSVAtTime(1, CHSV(HUE_YELLOW, 64, 255)),
+// static const ColorAtTime segments[] = {
+//   ColorAtTime(128, CHSV(HUE_PURPLE, 64, 16)),
+//   ColorAtTime(64, CHSV(HUE_BLUE, 96, 32)),
+//   ColorAtTime(32, CHSV(HUE_BLUE, 128, 64)),
+//   ColorAtTime(16, CHSV(HUE_PINK, 192, 96)),
+//   ColorAtTime(8, CHSV(HUE_RED, 255, 128)),
+//   ColorAtTime(4, CHSV(HUE_ORANGE, 192, 160)),
+//   ColorAtTime(2, CHSV(HUE_YELLOW, 128, 192)),
+//   ColorAtTime(1, CHSV(HUE_YELLOW, 64, 255)),
+// };
+
+static const ColorAtTime segments[] = {
+  ColorAtTime(4, CRGB(1,2,4)),
+  ColorAtTime(8, CRGB(4, 4, 13)),
+  ColorAtTime(2, CRGB(21, 2, 11)),
+  ColorAtTime(2, CRGB(40, 0, 5)),
+  ColorAtTime(1, CRGB(128, 73, 20)),
+  // ColorAtTime(8, Candle),
 };
 
 static const int segments_len = sizeof(segments)/sizeof(segments[0]);
@@ -47,10 +50,18 @@ void print(CHSV c) {
     DEBUG_PRINT(i>>4, HEX); DEBUG_PRINT(i & 0xf, HEX);
   }
 
+  void hexPrint(uint16_t i) {
+    hexPrint(uint8_t(i>>8)); hexPrint(uint8_t(i&0xff));
+  }
+
 void print(CRGB c) {
   DEBUG_PRINT("RGB(0x"); hexPrint(c.r); hexPrint(c.g); hexPrint(c.b); DEBUG_PRINT(")");
 }
 
+void print(fract8 f) {
+  DEBUG_PRINT(f/256.0);
+  DEBUG_PRINT(" ("); hexPrint(f); DEBUG_PRINT(")");
+}
 void setEndDurations(uint32_t duration) {
   // compute the start time of each segment
   // starting at the last one
@@ -66,6 +77,9 @@ void setEndDurations(uint32_t duration) {
 }
 
 void setup() {
+  DEBUG_PRINT("blend(0x000000,0x010204,0xFE) is "); print(blend(0x000000,0x010204,0xfe)); DEBUG_PRINTLN(" should be 010204");
+  DEBUG_PRINT("blend(0x010204,0x020408,0x01) is "); print(blend(0x010204,0x020408,0x01)); DEBUG_PRINTLN(" should be 010204");
+  DEBUG_PRINT("blend(0x010204,0x020408,0xFE) is "); print(blend(0x010204,0x020408,0xfe)); DEBUG_PRINTLN(" should be 020408");
   for (int i = 0; i < segments_len; i++) {
     sum += segments[i].time;
   }
@@ -76,36 +90,31 @@ void setup() {
   clear();
 }
 
-fract8 interpolate8(int x, int a, int b) { // where is x in the range [a..b]?
-  return (x-a)*256/(b-a);
-}
-
-void print(fract8 f) {
-  DEBUG_PRINT(f/256.0);
-}
-
 void loop() {
   if (startTime == 0) return;
   uint32_t t = millis()-startTime;
   DEBUG_PRINT("t "); DEBUG_PRINT(t);
-  while (segmentIndex < segments_len && endDuration[segmentIndex] < t) {
+  while (segmentIndex < segments_len && endDuration[segmentIndex] <= t) {
     segmentIndex++;
   };
-  DEBUG_PRINT(", segmentIndex "); DEBUG_PRINT(segmentIndex);
-  CHSV color;
+  DEBUG_PRINT(", ["); DEBUG_PRINT(segmentIndex); DEBUG_PRINT("]");
+  CRGB color;
   if (segmentIndex < segments_len) {
     uint32_t start = (segmentIndex == 0 ? 0 : endDuration[segmentIndex -1]);
     DEBUG_PRINT(", range ["); DEBUG_PRINT(start); DEBUG_PRINT(".."); DEBUG_PRINT(endDuration[segmentIndex]); DEBUG_PRINT("]");
-    DEBUG_PRINT(", pct "); print(interpolate8(t, start, endDuration[segmentIndex]));
-    CHSV startColor  = (segmentIndex == 0 ? CHSV(0,0,0) : segments[segmentIndex-1].color);
-    DEBUG_PRINT(", startColor "); print(startColor);
-    DEBUG_PRINT(", endColor "); print(segments[segmentIndex].color);
-    color = blend(startColor, segments[segmentIndex].color, interpolate8(t, start, endDuration[segmentIndex]));
+    color  = (segmentIndex == 0 ? CRGB(0,0,0) : segments[segmentIndex-1].color);
+    DEBUG_PRINT(", nblend([");
+    print(color);
+    DEBUG_PRINT(".."); print(segments[segmentIndex].color);
+    fract8 f = (t-start)*256/(endDuration[segmentIndex]-start);
+    DEBUG_PRINT("], "); print(f);
+    color = nblend(color, segments[segmentIndex].color, f);
+    DEBUG_PRINT(")");
   } else {
     color = segments[segments_len-1].color;
     stop(); // all done
   }
-  DEBUG_PRINT(", color "); print(color); DEBUG_PRINT(" "); print(CRGB(color));
+  DEBUG_PRINT(", color "); print(color);
   fill_solid (leds, NUM_LEDS, color);
   FastLED.show();
   FastLED.delay(50);

@@ -1,3 +1,4 @@
+#include "dawn_alarm.h"
 #include "ntp.h"
 #include "leds.h"
 
@@ -5,7 +6,7 @@
 
 void MorningAlarm() {
   Serial.println("MorningAlarm");
-#ifndef DEBUG
+#ifdef NDEBUG
   leds::start(1*SECS_PER_HOUR*1000);
 #else
   leds::start(1*SECS_PER_MIN*1000);
@@ -17,7 +18,7 @@ void setup() {
   delay(250);
   ntp::setup();
   leds::setup();
-#ifndef DEBUG
+#ifdef NDEBUG
   Alarm.alarmRepeat(6,0,0, MorningAlarm);
 #else
   Alarm.alarmOnce(hour(now()), minute(now()), second(now())+5, MorningAlarm);
