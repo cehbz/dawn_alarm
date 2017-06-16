@@ -20,6 +20,11 @@ IPAddress timeServer(132, 163, 4, 101); // time-a.timefreq.bldrdoc.gov
 //static const int timeZone = -7;  // Pacific Daylight Time (USA)
 static const int timeZone = 10; // Eastern Standard Time (AU) [Melbourne]
 
+time_t curTime = 0;
+uint32_t curTimeLastSetMillis = 0;
+uint32_t ntpPacketSentMillis = 0;
+uint32_t syncIntervalMillis = 0;
+
 void blink(int count) {
   for (int i = 0; i < count; i++) {
     digitalWrite(LED_BUILTIN, LOW);
@@ -30,7 +35,7 @@ void blink(int count) {
   delay(500);
 }
 
-  void printDigits(char *sep, int digits){
+void printDigits(char *sep, int digits){
   // utility for digital clock display: prints preceding colon and leading 0
   Serial.print(sep);
   if(digits < 10)
@@ -78,33 +83,40 @@ void sendNTPpacket(IPAddress &address)
   Udp.beginPacket(address, 123); //NTP requests are to port 123
   Udp.write(packetBuffer, NTP_PACKET_SIZE);
   Udp.endPacket();
+  ntpPacketSentMillis = millis();
+}
+
+void gotNTPResponse() {
+  Serial.println("Receive NTP Response");
+  ntpPacketSentMillis = 0;
+  blink(3);
+  Udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
+  static const unsigned long secsFrom1900ToUnixEpoch = 2208988800UL;
+  unsigned long secsSince1900;
+  // convert four bytes starting at location 40 to a long integer
+  secsSince1900 =  (unsigned long)packetBuffer[40] << 24;
+  secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
+  secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
+  secsSince1900 |= (unsigned long)packetBuffer[43];
+  digitalClockDisplay();
+  curTime = secsSince1900 - secsFrom1900ToUnixEpoch + timeZone * SECS_PER_HOUR;
+  setTime(curTime);
+  curTimeLastSetMillis = millis();
+  digitalClockDisplay();
+}
+
+time_t getTime() {
+  return curTime + (millis()-curTimeLastSetMillis)/1000;
 }
 
 time_t getNTPTime()
 {
-  for (;;) { // keep trying till we get a time
+  if (ntpPacketSentMillis == 0 || millis() - ntpPacketSentMillis >= 1500) {
     while (Udp.parsePacket() > 0) ; // discard any previously received packets
     Serial.println("Transmit NTP Request");
     sendNTPpacket(timeServer);
-    uint32_t beginWait = millis();
-    while (millis() - beginWait < 1500) {
-      int size = Udp.parsePacket();
-      if (size >= NTP_PACKET_SIZE) {
-        Serial.println("Receive NTP Response");
-        blink(3);
-        Udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
-        static const unsigned long secsFrom1900ToUnixEpoch = 2208988800UL;
-        unsigned long secsSince1900;
-        // convert four bytes starting at location 40 to a long integer
-        secsSince1900 =  (unsigned long)packetBuffer[40] << 24;
-        secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
-        secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
-        secsSince1900 |= (unsigned long)packetBuffer[43];
-        return secsSince1900 - secsFrom1900ToUnixEpoch + timeZone * SECS_PER_HOUR;
-      }
-    }
-    Serial.println("No NTP Response :-(");
   }
+  return getTime();
 }
 
 void setup()
@@ -132,20 +144,38 @@ void setup()
   Udp.begin(localPort);
   Serial.print("Local port: ");
   Serial.println(Udp.localPort());
-  Serial.println("waiting for sync");
+  syncIntervalMillis = 1000*SECS_PER_HOUR;
+  Serial.print("Initial NTP Sync");
+  getNTPTime();
+  // wait for first sync
+  while (curTimeLastSetMillis == 0) {
+    loop();
+  }
   setSyncInterval(1*SECS_PER_HOUR);
-  setSyncProvider(getNTPTime);
+  setSyncProvider(getTime);
 }
 
 time_t prevDisplay = 0; // when the digital clock was displayed
 
 void loop()
 {
-  if (timeStatus() != timeNotSet) {
-    if (hour(now()) != hour(prevDisplay)) { //update the display only if time has changed
-      prevDisplay = now();
-      digitalClockDisplay();
+  if (ntpPacketSentMillis == 0) {
+    if  (millis() - curTimeLastSetMillis >= syncIntervalMillis) {
+      Serial.print("NTP sync update");
+      getNTPTime();
+      return;
     }
+    return;
+  }
+  if (millis() - ntpPacketSentMillis >= 1500) {
+    Serial.print("NTP packet timed out");
+    getNTPTime();
+    return;
+  }
+  // ntpPacketSentMillis > 0 - we have an NTP packet in flight
+  if (Udp.parsePacket() >= NTP_PACKET_SIZE) {
+    gotNTPResponse();
+    return;
   }
 }
 
