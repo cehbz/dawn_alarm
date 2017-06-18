@@ -32,31 +32,31 @@ namespace leds {
     {
     }
 
-    // /// allow construction from 16 bit R, G, B
-    // inline CRGB16( uint16_t ir, uint16_t ig, uint16_t ib)  __attribute__((always_inline))
-    //   : r(ir), g(ig), b(ib)
-    // {
-    // }
-
-    /// allow construction from 8 bit R, G, B
-    inline CRGB16( uint8_t ir, uint8_t ig, uint8_t ib)  __attribute__((always_inline))
-      : r(ir<<8), g(ig<<8), b(ib<<8)
+    // allow construction from 16 bit R, G, B
+    inline CRGB16( uint16_t ir, uint16_t ig, uint16_t ib)  __attribute__((always_inline))
+      : r(ir), g(ig), b(ib)
     {
     }
 
-    /// allow copy construction
+    // // allow construction from 8 bit R, G, B
+    // inline CRGB16( uint8_t ir, uint8_t ig, uint8_t ib)  __attribute__((always_inline))
+    //   : r(ir<<8), g(ig<<8), b(ib<<8)
+    // {
+    // }
+
+    // allow copy construction
     inline CRGB16(const CRGB16& rhs) __attribute__((always_inline))
       : r(rhs.r), g(rhs.g), b(rhs.b)
     {
     }
 
-    /// allow construction from 8 bit CRGB
+    // allow construction from 8 bit CRGB
     inline CRGB16(const CRGB& rhs) __attribute__((always_inline))
       : r(rhs.r<<8), g(rhs.g<<8), b(rhs.b<<8)
     {
     }
 
-    /// allow assignment from 8 bit CRGB
+    // allow assignment from 8 bit CRGB
     inline CRGB16& operator= (const CRGB& rhs) __attribute__((always_inline))
     {
       r = rhs.r << 8;
@@ -89,12 +89,12 @@ namespace leds {
   // };
 
   static const ColorAtTime segments[] = {
-    ColorAtTime(8, CRGB16(1,2,4)),
-    ColorAtTime(16, CRGB16(4, 4, 13)),
-    ColorAtTime(8, CRGB16(21, 2, 11)),
-    ColorAtTime(8, CRGB16(40, 0, 5)),
-    ColorAtTime(4, CRGB16(128, 73, 20)),
-    ColorAtTime(4, CRGB16(Candle)),
+    ColorAtTime(8, CRGB(1,2,4)),
+    ColorAtTime(16, CRGB(4, 4, 13)),
+    ColorAtTime(8, CRGB(21, 2, 11)),
+    ColorAtTime(8, CRGB(40, 0, 5)),
+    ColorAtTime(4, CRGB(128, 73, 20)),
+    ColorAtTime(4, CRGB(Candle)),
   };
 
   static const int segments_len = sizeof(segments)/sizeof(segments[0]);
@@ -181,13 +181,15 @@ namespace leds {
     }
     DEBUG_PRINTF(", color %04x%04x%04x\n", color.r, color.g, color.b);
     for (int i = 0; i<NUM_LEDS; i++) {
-      // CRGB16 c(color.r+errorR, color.g+errorG, color.b+errorB);
-      leds[i] = CRGB16to8(color);
-      DEBUG_PRINTF("led[%d] %02x%02x%02x", i, leds[i].r, leds[i].g, leds[i].b);
-      // errorR = (c8.r<<8)-c.r;
-      // errorG = (c8.g<<8)-c.g;
-      // errorB = (c8.b<<8)-c.b;
-      // DEBUG_PRINTF(", error: %d, %d, %d", errorR, errorG, errorB);
+      DEBUG_PRINTF("start error: %d, %d, %d ", errorR, errorG, errorB);
+      CRGB16 c(color.r+errorR, color.g+errorG, color.b+errorB);
+      CRGB c8 = CRGB16to8(c);
+      leds[i] = c8;
+      DEBUG_PRINTF(", led[%d] %02x%02x%02x", i, leds[i].r, leds[i].g, leds[i].b);
+      errorR = c.r-(c8.r<<8);
+      errorG = c.g-(c8.g<<8);
+      errorB = c.b-(c8.b<<8);
+      DEBUG_PRINTF(", end error: %d, %d, %d", errorR, errorG, errorB);
       DEBUG_PRINTLN();
     }
     FastLED.show();
