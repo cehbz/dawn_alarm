@@ -66,7 +66,7 @@ namespace leds {
     }
   };
 
-  CRGB CRGB16to8(const CRGB16& c) {return CRGB(c.r>>8, c.g>>8, c.b>>8);}
+  CRGB CRGB16to8(const CRGB16& c) {return CRGB((c.r+0x80)>>8, (c.g+0x80)>>8, (c.b+0x80)>>8);}
 
   class ColorAtTime {
   public:
