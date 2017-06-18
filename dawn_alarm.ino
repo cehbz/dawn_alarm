@@ -21,7 +21,7 @@ void setup() {
 #ifdef NDEBUG
   Alarm.alarmRepeat(6,0,0, MorningAlarm);
 #else
-  Alarm.alarmOnce(hour(now()), minute(now()), second(now())+5, MorningAlarm);
+  Alarm.alarmOnce(hour(now()), minute(now()), second(now())+1, MorningAlarm);
 #endif
 }
 

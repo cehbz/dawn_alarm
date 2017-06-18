@@ -35,25 +35,16 @@ void blink(int count) {
   delay(500);
 }
 
-void printDigits(char *sep, int digits){
-  // utility for digital clock display: prints preceding colon and leading 0
-  Serial.print(sep);
-  if(digits < 10)
-    Serial.print('0');
-  Serial.print(digits);
-}
-
 void digitalClockDisplay(){
   // digital clock display of the time
-  printDigits("", year());
-  printDigits("-", month());
-  printDigits("-", day());
-  printDigits("T", hour());
-  printDigits(":", minute());
-  printDigits(":", second());
-  printDigits(timeZone>=0?"+":"-", abs(timeZone));
-  printDigits(":", 0);
-  Serial.println();
+  Serial.printf("%02d-%02d-%02dT%02d:%02d:%02d%+02d:00\n",
+                year(),
+                month(),
+                day(),
+                hour(),
+                minute(),
+                second(),
+                timeZone);
 }
 
 WiFiUDP Udp;
@@ -87,7 +78,7 @@ void sendNTPpacket(IPAddress &address)
 }
 
 void gotNTPResponse() {
-  Serial.println("Receive NTP Response");
+  Serial.printf("Receive NTP Response @%d\n", millis());
   ntpPacketSentMillis = 0;
   blink(3);
   Udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
@@ -99,8 +90,12 @@ void gotNTPResponse() {
   secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
   secsSince1900 |= (unsigned long)packetBuffer[43];
   digitalClockDisplay();
+  time_t prevTime = curTime;
   curTime = secsSince1900 - secsFrom1900ToUnixEpoch + timeZone * SECS_PER_HOUR;
   setTime(curTime);
+  if (curTime-prevTime != 0) {
+    Serial.printf("Time adjusted  %+d secs\n", curTime-prevTime) ;
+  }
   curTimeLastSetMillis = millis();
   digitalClockDisplay();
 }
@@ -113,7 +108,7 @@ time_t getNTPTime()
 {
   if (ntpPacketSentMillis == 0 || millis() - ntpPacketSentMillis >= 1500) {
     while (Udp.parsePacket() > 0) ; // discard any previously received packets
-    Serial.println("Transmit NTP Request");
+    Serial.printf("Transmit NTP Request @%d\n", millis());
     sendNTPpacket(timeServer);
   }
   return getTime();
@@ -145,7 +140,7 @@ void setup()
   Serial.print("Local port: ");
   Serial.println(Udp.localPort());
   syncIntervalMillis = 1000*SECS_PER_HOUR;
-  Serial.print("Initial NTP Sync");
+  Serial.println("Initial NTP Sync");
   getNTPTime();
   // wait for first sync
   while (curTimeLastSetMillis == 0) {
@@ -161,14 +156,14 @@ void loop()
 {
   if (ntpPacketSentMillis == 0) {
     if  (millis() - curTimeLastSetMillis >= syncIntervalMillis) {
-      Serial.print("NTP sync update");
+      Serial.println("NTP sync update");
       getNTPTime();
       return;
     }
     return;
   }
   if (millis() - ntpPacketSentMillis >= 1500) {
-    Serial.print("NTP packet timed out");
+    Serial.println("NTP packet timed out");
     getNTPTime();
     return;
   }
