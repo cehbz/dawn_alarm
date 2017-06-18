@@ -1,72 +1,12 @@
 #include "dawn_alarm.h"
 #include "leds.h"
 #include <FastLED.h>
+#include "crgb16.h"
 
 namespace leds {
   static const int NUM_LEDS = 30;
   static const int DATA_PIN = 1; // D1, GPIO5
   CRGB leds[NUM_LEDS];
-
-  /// Representation of a 16 bit RGB pixel (Red, Green, Blue)
-  struct CRGB16 {
-    union {
-      struct {
-        union {
-          uint16_t r;
-          uint16_t red;
-        };
-        union {
-          uint16_t g;
-          uint16_t green;
-        };
-        union {
-          uint16_t b;
-          uint16_t blue;
-        };
-      };
-      uint16_t raw[3];
-    };
-
-    // default values are UNINITIALIZED
-    inline CRGB16() __attribute__((always_inline))
-    {
-    }
-
-    // allow construction from 16 bit R, G, B
-    inline CRGB16( uint16_t ir, uint16_t ig, uint16_t ib)  __attribute__((always_inline))
-      : r(ir), g(ig), b(ib)
-    {
-    }
-
-    // // allow construction from 8 bit R, G, B
-    // inline CRGB16( uint8_t ir, uint8_t ig, uint8_t ib)  __attribute__((always_inline))
-    //   : r(ir<<8), g(ig<<8), b(ib<<8)
-    // {
-    // }
-
-    // allow copy construction
-    inline CRGB16(const CRGB16& rhs) __attribute__((always_inline))
-      : r(rhs.r), g(rhs.g), b(rhs.b)
-    {
-    }
-
-    // allow construction from 8 bit CRGB
-    inline CRGB16(const CRGB& rhs) __attribute__((always_inline))
-      : r(rhs.r<<8), g(rhs.g<<8), b(rhs.b<<8)
-    {
-    }
-
-    // allow assignment from 8 bit CRGB
-    inline CRGB16& operator= (const CRGB& rhs) __attribute__((always_inline))
-    {
-      r = rhs.r << 8;
-      g = rhs.g << 8;
-      b = rhs.b << 8;
-      return *this;
-    }
-  };
-
-  CRGB CRGB16to8(const CRGB16& c) {return CRGB((c.r+0x80)>>8, (c.g+0x80)>>8, (c.b+0x80)>>8);}
 
   class ColorAtTime {
   public:
@@ -151,6 +91,19 @@ namespace leds {
     clear();
   }
 
+  //#define LEDS_DEBUG
+#undef LEDS_DEBUG
+
+#ifdef LEDS_DEBUG
+#define LEDS_DEBUG_PRINTF(...) Serial.printf(__VA_ARGS__)
+#define LEDS_DEBUG_PRINT(...) Serial.print(__VA_ARGS__)
+#define LEDS_DEBUG_PRINTLN(...) Serial.println(__VA_ARGS__)
+#else
+#define LEDS_DEBUG_PRINTF(...) 0
+#define LEDS_DEBUG_PRINT(...) 0
+#define LEDS_DEBUG_PRINTLN(...) 0
+#endif
+
   int16_t errorR = 0;
   int16_t errorG = 0;
   int16_t errorB = 0;
@@ -159,18 +112,18 @@ namespace leds {
   void loop() {
     if (startTime == 0) return;
     uint32_t t = millis()-startTime;
-    DEBUG_PRINTF("t %d", t);
+    LEDS_DEBUG_PRINTF("t %d", t);
     while (segmentIndex < segments_len && endDuration[segmentIndex] <= t) {
       segmentIndex++;
     };
-    DEBUG_PRINTF(", [%d]", segmentIndex);
+    LEDS_DEBUG_PRINTF(", [%d]", segmentIndex);
     CRGB16 color;
     if (segmentIndex < segments_len) {
       uint32_t start = (segmentIndex == 0 ? 0 : endDuration[segmentIndex -1]);
-      DEBUG_PRINTF(", range [%d..%d]", start, endDuration[segmentIndex]);
+      LEDS_DEBUG_PRINTF(", range [%d..%d]", start, endDuration[segmentIndex]);
       color  = (segmentIndex == 0 ? CRGB16(0,0,0) : segments[segmentIndex-1].color);
       fract16 f = (t-start)*(0x10000)/(endDuration[segmentIndex]-start);
-      DEBUG_PRINTF(", nblend16([%04x%04x%04x..%04x%04x%04x], .%03d [%d])",
+      LEDS_DEBUG_PRINTF(", nblend16([%04x%04x%04x..%04x%04x%04x], .%03d [%d])",
                    color.r, color.g, color.b,
                    segments[segmentIndex].color.r, segments[segmentIndex].color.g, segments[segmentIndex].color.b,
                    f*1000/(0x10000), f);
@@ -179,22 +132,22 @@ namespace leds {
       color = segments[segments_len-1].color;
       stop(); // all done
     }
-    DEBUG_PRINTF(", color %04x%04x%04x\n", color.r, color.g, color.b);
+    LEDS_DEBUG_PRINTF(", color %04x%04x%04x\n", color.r, color.g, color.b);
     for (int i = 0; i<NUM_LEDS; i++) {
-      DEBUG_PRINTF("start error: %d, %d, %d ", errorR, errorG, errorB);
+      LEDS_DEBUG_PRINTF("start error: %d, %d, %d ", errorR, errorG, errorB);
       CRGB16 c(color.r+errorR, color.g+errorG, color.b+errorB);
-      CRGB c8 = CRGB16to8(c);
+      CRGB c8 = c.CRGB16to8();
       leds[i] = c8;
-      DEBUG_PRINTF(", led[%d] %02x%02x%02x", i, leds[i].r, leds[i].g, leds[i].b);
+      LEDS_DEBUG_PRINTF(", led[%d] %02x%02x%02x", i, leds[i].r, leds[i].g, leds[i].b);
       errorR = c.r-(c8.r<<8);
       errorG = c.g-(c8.g<<8);
       errorB = c.b-(c8.b<<8);
-      DEBUG_PRINTF(", end error: %d, %d, %d", errorR, errorG, errorB);
-      DEBUG_PRINTLN();
+      LEDS_DEBUG_PRINTF(", end error: %d, %d, %d", errorR, errorG, errorB);
+      LEDS_DEBUG_PRINTLN();
     }
     FastLED.show();
     FastLED.delay(0);
-    DEBUG_PRINTLN();
+    LEDS_DEBUG_PRINTLN();
     frames++;
     if (millis()>=fpsEndTime) {
       DEBUG_PRINTF("%d fps\n", frames);

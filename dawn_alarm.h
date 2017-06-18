@@ -1,8 +1,8 @@
 #ifndef DAWN_ALARM_H
 #define DAWN_ALARM_H
 
-// #define NDEBUG
-#undef NDEBUG
+#define NDEBUG
+// #undef NDEBUG
 
 #ifndef NDEBUG
 #define DEBUG_PRINTF(...) Serial.printf(__VA_ARGS__)

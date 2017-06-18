@@ -77,6 +77,10 @@ void sendNTPpacket(IPAddress &address)
   ntpPacketSentMillis = millis();
 }
 
+time_t getTime() {
+  return curTime + (millis()-curTimeLastSetMillis)/1000;
+}
+
 void gotNTPResponse() {
   Serial.printf("Receive NTP Response @%d\n", millis());
   ntpPacketSentMillis = 0;
@@ -90,7 +94,7 @@ void gotNTPResponse() {
   secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
   secsSince1900 |= (unsigned long)packetBuffer[43];
   digitalClockDisplay();
-  time_t prevTime = curTime;
+  time_t prevTime = getTime();
   curTime = secsSince1900 - secsFrom1900ToUnixEpoch + timeZone * SECS_PER_HOUR;
   setTime(curTime);
   if (curTime-prevTime != 0) {
@@ -98,10 +102,6 @@ void gotNTPResponse() {
   }
   curTimeLastSetMillis = millis();
   digitalClockDisplay();
-}
-
-time_t getTime() {
-  return curTime + (millis()-curTimeLastSetMillis)/1000;
 }
 
 time_t getNTPTime()
@@ -113,6 +113,14 @@ time_t getNTPTime()
   }
   return getTime();
 }
+
+  void lookupTimeServerByName(const char* name) {
+    WiFi.hostByName(name, timeServer);
+    Serial.print("NTP server ");
+    Serial.print(NTPServerName);
+    Serial.print(" at IP ");
+    Serial.println(timeServer);
+  }
 
 void setup()
 {
@@ -130,11 +138,7 @@ void setup()
   blink(2);
   Serial.print("IP number assigned by DHCP is ");
   Serial.println(WiFi.localIP());
-  WiFi.hostByName(NTPServerName, timeServer);
-  Serial.print("NTP server ");
-  Serial.print(NTPServerName);
-  Serial.print(" at IP ");
-  Serial.println(timeServer);
+  lookupTimeServerByName(NTPServerName);
   Serial.println("Starting UDP");
   Udp.begin(localPort);
   Serial.print("Local port: ");
