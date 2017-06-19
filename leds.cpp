@@ -13,20 +13,8 @@ namespace leds {
     uint32_t time;
     CRGB16 color;
 
-    // ColorAtTime(uint32_t t, CHSV c) : time{t}, color{CRGB16(c)} {}
     ColorAtTime(uint32_t t, CRGB16 c) : time{t}, color{c} {}
   };
-
-  // static const ColorAtTime segments[] = {
-  //   ColorAtTime(128, CHSV(HUE_PURPLE, 64, 16)),
-  //   ColorAtTime(64, CHSV(HUE_BLUE, 96, 32)),
-  //   ColorAtTime(32, CHSV(HUE_BLUE, 128, 64)),
-  //   ColorAtTime(16, CHSV(HUE_PINK, 192, 96)),
-  //   ColorAtTime(8, CHSV(HUE_RED, 255, 128)),
-  //   ColorAtTime(4, CHSV(HUE_ORANGE, 192, 160)),
-  //   ColorAtTime(2, CHSV(HUE_YELLOW, 128, 192)),
-  //   ColorAtTime(1, CHSV(HUE_YELLOW, 64, 255)),
-  // };
 
   static const ColorAtTime segments[] = {
     ColorAtTime(8, CRGB(1,2,4)),
@@ -44,15 +32,10 @@ namespace leds {
   uint32_t startTime = 0;
 
   void setEndDurations(uint32_t duration) {
-    // compute the start time of each segment
-    // starting at the last one
-    DEBUG_PRINT("setEndDurations: "); DEBUG_PRINTLN(duration);
     uint32_t end = 0;
     for (int i = 0; i < segments_len; i++) {
-      DEBUG_PRINTF("segment[%d] [%d..%d) ", i, end, end + segments[i].time);
       end += segments[i].time;
       endDuration[i] = duration*end/sum;
-      DEBUG_PRINTLN(endDuration[i]);
     }
   }
 
@@ -82,6 +65,8 @@ namespace leds {
     return existing;
   }
 
+  uint32_t fpsEndTime;
+  uint32_t frames;
   void setup() {
     for (int i = 0; i < segments_len; i++) {
       sum += segments[i].time;
@@ -89,9 +74,11 @@ namespace leds {
     FastLED.setMaxPowerInVoltsAndMilliamps(5, 4000);
     FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
     clear();
+    fpsEndTime = millis()+1000;
+    frames = 0;
   }
 
-  //#define LEDS_DEBUG
+  // #define LEDS_DEBUG
 #undef LEDS_DEBUG
 
 #ifdef LEDS_DEBUG
@@ -104,47 +91,71 @@ namespace leds {
 #define LEDS_DEBUG_PRINTLN(...) 0
 #endif
 
-  int16_t errorR = 0;
-  int16_t errorG = 0;
-  int16_t errorB = 0;
-  uint32_t fpsEndTime = millis()+1000;
-  uint32_t frames = 0;
-  void loop() {
-    if (startTime == 0) return;
+  CRGB16 getColor() {
     uint32_t t = millis()-startTime;
     LEDS_DEBUG_PRINTF("t %d", t);
     while (segmentIndex < segments_len && endDuration[segmentIndex] <= t) {
       segmentIndex++;
     };
     LEDS_DEBUG_PRINTF(", [%d]", segmentIndex);
-    CRGB16 color;
-    if (segmentIndex < segments_len) {
-      uint32_t start = (segmentIndex == 0 ? 0 : endDuration[segmentIndex -1]);
-      LEDS_DEBUG_PRINTF(", range [%d..%d]", start, endDuration[segmentIndex]);
-      color  = (segmentIndex == 0 ? CRGB16(0,0,0) : segments[segmentIndex-1].color);
-      fract16 f = (t-start)*(0x10000)/(endDuration[segmentIndex]-start);
-      LEDS_DEBUG_PRINTF(", nblend16([%04x%04x%04x..%04x%04x%04x], .%03d [%d])",
-                   color.r, color.g, color.b,
-                   segments[segmentIndex].color.r, segments[segmentIndex].color.g, segments[segmentIndex].color.b,
-                   f*1000/(0x10000), f);
-      color = nblend16(color, CRGB16(segments[segmentIndex].color), f);
-    } else {
-      color = segments[segments_len-1].color;
+    if (segmentIndex >= segments_len) {
       stop(); // all done
+      return segments[segments_len-1].color;
     }
-    LEDS_DEBUG_PRINTF(", color %04x%04x%04x\n", color.r, color.g, color.b);
+    uint32_t start = (segmentIndex == 0 ? 0 : endDuration[segmentIndex -1]);
+    LEDS_DEBUG_PRINTF(", range [%d..%d]", start, endDuration[segmentIndex]);
+    CRGB16 color  = (segmentIndex == 0 ? CRGB16(0,0,0) : segments[segmentIndex-1].color);
+    fract16 f = (t-start)*(0x10000)/(endDuration[segmentIndex]-start);
+    LEDS_DEBUG_PRINTF(", nblend16([%04x%04x%04x..%04x%04x%04x], .%03d [%d])",
+                      color.r, color.g, color.b,
+                      segments[segmentIndex].color.r, segments[segmentIndex].color.g, segments[segmentIndex].color.b,
+                      f*1000/(0x10000), f);
+    return nblend16(color, CRGB16(segments[segmentIndex].color), f);
+  }
+
+  void updateComponentAndError(uint16_t& component, int16_t& error) {
+    int c = component + error;
+    if (c < 0) {
+      error = c;
+      component = 0;
+      LEDS_DEBUG_PRINT("<");
+    } else if (c > 65535) {
+      error = c - 65535;
+      component = 65535;
+      LEDS_DEBUG_PRINT(">");
+    } else {
+      error = 0;
+      component = c;
+      LEDS_DEBUG_PRINT("=");
+    }
+  }
+
+  int16_t errorR = 0;
+  int16_t errorG = 0;
+  int16_t errorB = 0;
+  void setLeds(CRGB16& color) {
     for (int i = 0; i<NUM_LEDS; i++) {
-      LEDS_DEBUG_PRINTF("start error: %d, %d, %d ", errorR, errorG, errorB);
-      CRGB16 c(color.r+errorR, color.g+errorG, color.b+errorB);
+      CRGB16 c(color);
+      LEDS_DEBUG_PRINTF("start error: %+d, %+d, %+d ", errorR, errorG, errorB);
+      updateComponentAndError(c.r, errorR);
+      updateComponentAndError(c.g, errorG);
+      updateComponentAndError(c.b, errorB);
       CRGB c8 = c.CRGB16to8();
       leds[i] = c8;
       LEDS_DEBUG_PRINTF(", led[%d] %02x%02x%02x", i, leds[i].r, leds[i].g, leds[i].b);
-      errorR = c.r-(c8.r<<8);
-      errorG = c.g-(c8.g<<8);
-      errorB = c.b-(c8.b<<8);
-      LEDS_DEBUG_PRINTF(", end error: %d, %d, %d", errorR, errorG, errorB);
+      errorR += c.r-(c8.r<<8);
+      errorG += c.g-(c8.g<<8);
+      errorB += c.b-(c8.b<<8);
+      LEDS_DEBUG_PRINTF(", end error: %+d, %+d, %+d", errorR, errorG, errorB);
       LEDS_DEBUG_PRINTLN();
     }
+  }
+
+  void loop() {
+    if (startTime == 0) return; // not running
+    CRGB16 color = getColor();
+    LEDS_DEBUG_PRINTF(", color %04x%04x%04x\n", color.r, color.g, color.b);
+    setLeds(color);
     FastLED.show();
     FastLED.delay(0);
     LEDS_DEBUG_PRINTLN();

@@ -61,13 +61,19 @@ struct CRGB16 {
     return *this;
   }
 
+  __attribute__((always_inline)) static inline uint16_t qadd16(uint16_t i, uint16_t j) {
+    unsigned int t = i + j;
+    if( t > 65535) t = 65535;
+    return t;
+  }
+
   // convert CRGB16 to CRGB 8 bit
   inline CRGB CRGB16to8() __attribute__((always_inline))
   {
     return CRGB(
-                (r+0x80)>>8,
-                (g+0x80)>>8,
-                (b+0x80)>>8
+                qadd16(r,0x80)>>8,
+                qadd16(g,0x80)>>8,
+                qadd16(b,0x80)>>8
                 );
   }
 };
