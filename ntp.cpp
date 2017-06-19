@@ -82,7 +82,7 @@ time_t getTime() {
 }
 
 void gotNTPResponse() {
-  Serial.printf("Receive NTP Response @%d\n", millis());
+  Serial.printf("@%u: Receive NTP Response\n", millis());
   ntpPacketSentMillis = 0;
   blink(3);
   Udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
@@ -108,7 +108,7 @@ time_t getNTPTime()
 {
   if (ntpPacketSentMillis == 0 || millis() - ntpPacketSentMillis >= 1500) {
     while (Udp.parsePacket() > 0) ; // discard any previously received packets
-    Serial.printf("Transmit NTP Request @%d\n", millis());
+    Serial.printf("@%u: Transmit NTP Request\n", millis());
     sendNTPpacket(timeServer);
   }
   return getTime();
@@ -116,9 +116,7 @@ time_t getNTPTime()
 
   void lookupTimeServerByName(const char* name) {
     WiFi.hostByName(name, timeServer);
-    Serial.print("NTP server ");
-    Serial.print(NTPServerName);
-    Serial.print(" at IP ");
+    Serial.printf("NTP server %s at IP ", NTPServerName);
     Serial.println(timeServer);
   }
 
@@ -136,19 +134,21 @@ void setup()
   }
 
   blink(2);
-  Serial.print("IP number assigned by DHCP is ");
-  Serial.println(WiFi.localIP());
-  lookupTimeServerByName(NTPServerName);
-  Serial.println("Starting UDP");
-  Udp.begin(localPort);
-  Serial.print("Local port: ");
-  Serial.println(Udp.localPort());
-  syncIntervalMillis = 1000*SECS_PER_HOUR;
-  Serial.println("Initial NTP Sync");
-  getNTPTime();
-  // wait for first sync
+  Serial.printf("@%u: IP: ", millis()); Serial.print(WiFi.localIP());
+  Serial.print("RSSI (signal strength):"); Serial.print(WiFi.RSSI()); Serial.println(" dBm");
+
+  time_t ntpSyncStartMillis = 0;
   while (curTimeLastSetMillis == 0) {
-    loop();
+    ntpSyncStartMillis = millis();
+    lookupTimeServerByName(NTPServerName);
+    Udp.begin(localPort);
+    syncIntervalMillis = 1000*SECS_PER_HOUR;
+    Serial.println("Initial NTP Sync");
+    getNTPTime();
+    // wait for first sync
+    while (curTimeLastSetMillis == 0 && millis()-ntpSyncStartMillis < 10*1000) { // try this server for 10 seconds before trying a different one
+      loop();
+    }
   }
   setSyncInterval(1*SECS_PER_HOUR);
   setSyncProvider(getTime);

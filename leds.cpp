@@ -91,7 +91,9 @@ namespace leds {
 #define LEDS_DEBUG_PRINTLN(...) 0
 #endif
 
+  CRGB16 lastSetColor;
   CRGB16 getColor() {
+    if (startTime == 0) return lastSetColor;
     uint32_t t = millis()-startTime;
     LEDS_DEBUG_PRINTF("t %d", t);
     while (segmentIndex < segments_len && endDuration[segmentIndex] <= t) {
@@ -133,7 +135,8 @@ namespace leds {
   int16_t errorR = 0;
   int16_t errorG = 0;
   int16_t errorB = 0;
-  void setLeds(CRGB16& color) {
+  void setColor(const CRGB16& color) {
+    lastSetColor = color;
     for (int i = 0; i<NUM_LEDS; i++) {
       CRGB16 c(color);
       LEDS_DEBUG_PRINTF("start error: %+d, %+d, %+d ", errorR, errorG, errorB);
@@ -149,15 +152,15 @@ namespace leds {
       LEDS_DEBUG_PRINTF(", end error: %+d, %+d, %+d", errorR, errorG, errorB);
       LEDS_DEBUG_PRINTLN();
     }
+    FastLED.show();
+    FastLED.delay(0);
   }
 
   void loop() {
     if (startTime == 0) return; // not running
     CRGB16 color = getColor();
     LEDS_DEBUG_PRINTF(", color %04x%04x%04x\n", color.r, color.g, color.b);
-    setLeds(color);
-    FastLED.show();
-    FastLED.delay(0);
+    setColor(color);
     LEDS_DEBUG_PRINTLN();
     frames++;
     if (millis()>=fpsEndTime) {
