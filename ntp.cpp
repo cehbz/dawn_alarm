@@ -82,7 +82,7 @@ time_t getTime() {
 }
 
 void gotNTPResponse() {
-  Serial.printf("@%u: Receive NTP Response\n", millis());
+  Serial.printf("@%lu: Receive NTP Response\n", millis());
   ntpPacketSentMillis = 0;
   blink(3);
   Udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
@@ -98,7 +98,7 @@ void gotNTPResponse() {
   curTime = secsSince1900 - secsFrom1900ToUnixEpoch + timeZone * SECS_PER_HOUR;
   setTime(curTime);
   if (curTime-prevTime != 0) {
-    Serial.printf("Time adjusted  %+d secs\n", curTime-prevTime) ;
+    Serial.printf("Time adjusted  %+ld secs\n", curTime-prevTime) ;
   }
   curTimeLastSetMillis = millis();
   digitalClockDisplay();
@@ -108,7 +108,7 @@ time_t getNTPTime()
 {
   if (ntpPacketSentMillis == 0 || millis() - ntpPacketSentMillis >= 1500) {
     while (Udp.parsePacket() > 0) ; // discard any previously received packets
-    Serial.printf("@%u: Transmit NTP Request\n", millis());
+    Serial.printf("@%lu: Transmit NTP Request\n", millis());
     sendNTPpacket(timeServer);
   }
   return getTime();
@@ -134,8 +134,7 @@ void setup()
   }
 
   blink(2);
-  Serial.printf("@%u: IP: ", millis()); Serial.print(WiFi.localIP());
-  Serial.print("RSSI (signal strength):"); Serial.print(WiFi.RSSI()); Serial.println(" dBm");
+  Serial.printf("\n@%lu: IP: ", millis()); Serial.print(WiFi.localIP()); Serial.printf(" RSSI (signal strength): %d dBm\n", WiFi.RSSI());
 
   time_t ntpSyncStartMillis = 0;
   while (curTimeLastSetMillis == 0) {

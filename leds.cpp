@@ -16,11 +16,12 @@ namespace leds {
     ColorAtTime(uint32_t t, CRGB16 c) : time{t}, color{c} {}
   };
 
-  static const ColorAtTime segments[] = {
+static const ColorAtTime segments[] = {
     ColorAtTime(8, CRGB(1,2,4)),
     ColorAtTime(16, CRGB(4, 4, 13)),
     ColorAtTime(8, CRGB(21, 2, 11)),
     ColorAtTime(8, CRGB(40, 0, 5)),
+    // ColorAtTime(8, CRGB16(0x1000, 0x0400, 0x0080)),
     ColorAtTime(4, CRGB(128, 73, 20)),
     ColorAtTime(4, CRGB(Candle)),
   };
@@ -78,24 +79,11 @@ namespace leds {
     frames = 0;
   }
 
-  // #define LEDS_DEBUG
-#undef LEDS_DEBUG
-
-#ifdef LEDS_DEBUG
-#define LEDS_DEBUG_PRINTF(...) Serial.printf(__VA_ARGS__)
-#define LEDS_DEBUG_PRINT(...) Serial.print(__VA_ARGS__)
-#define LEDS_DEBUG_PRINTLN(...) Serial.println(__VA_ARGS__)
-#else
-#define LEDS_DEBUG_PRINTF(...) 0
-#define LEDS_DEBUG_PRINT(...) 0
-#define LEDS_DEBUG_PRINTLN(...) 0
-#endif
-
   CRGB16 lastSetColor;
   CRGB16 getColor() {
     if (startTime == 0) return lastSetColor;
     uint32_t t = millis()-startTime;
-    LEDS_DEBUG_PRINTF("t %d", t);
+    LEDS_DEBUG_PRINTF("t %u", t);
     while (segmentIndex < segments_len && endDuration[segmentIndex] <= t) {
       segmentIndex++;
     };
@@ -135,23 +123,29 @@ namespace leds {
   int16_t errorR = 0;
   int16_t errorG = 0;
   int16_t errorB = 0;
+
+  uint32_t lastSS = 0;
   void setColor(const CRGB16& color) {
+    uint32_t SS = 0;
     lastSetColor = color;
     for (int i = 0; i<NUM_LEDS; i++) {
       CRGB16 c(color);
-      LEDS_DEBUG_PRINTF("start error: %+d, %+d, %+d ", errorR, errorG, errorB);
+      LEDS_DEBUG_PRINTF("start error: %+4d, %+4d, %+4d ", errorR, errorG, errorB);
       updateComponentAndError(c.r, errorR);
       updateComponentAndError(c.g, errorG);
       updateComponentAndError(c.b, errorB);
       CRGB c8 = c.CRGB16to8();
       leds[i] = c8;
-      LEDS_DEBUG_PRINTF(", led[%d] %02x%02x%02x", i, leds[i].r, leds[i].g, leds[i].b);
+      SS += c8.r*c8.r+c8.g*c8.g+c8.b*c8.b;
+      LEDS_DEBUG_PRINTF(", led[%2d] %02x%02x%02x", i, leds[i].r, leds[i].g, leds[i].b);
       errorR += c.r-(c8.r<<8);
       errorG += c.g-(c8.g<<8);
       errorB += c.b-(c8.b<<8);
-      LEDS_DEBUG_PRINTF(", end error: %+d, %+d, %+d", errorR, errorG, errorB);
+      LEDS_DEBUG_PRINTF(", end error: %+4d, %+4d, %+4d", errorR, errorG, errorB);
       LEDS_DEBUG_PRINTLN();
     }
+    DEBUG_PRINTF("@%lu, sum squared: %3lu, delta:%3ld\n", millis(), SS, SS-lastSS);
+    lastSS = SS;
     FastLED.show();
     FastLED.delay(0);
   }
@@ -164,7 +158,7 @@ namespace leds {
     LEDS_DEBUG_PRINTLN();
     frames++;
     if (millis()>=fpsEndTime) {
-      DEBUG_PRINTF("%d fps\n", frames);
+      DEBUG_PRINTF("@%lu, %d fps\n", millis(), frames);
       fpsEndTime = millis()+1000;
       frames = 0;
     }

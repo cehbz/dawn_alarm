@@ -7,18 +7,52 @@
 namespace server {
   WiFiServer server(80);
 
+  void registerDynamicDNS() {
+    // Use WiFiClientSecure class to create TLS connection
+    WiFiClientSecure secureClient;
+    const char *host = "dynamicdns.park-your-domain.com";
+    const char* fingerprint = "8A BD E4 A3 CE 85 A3 FB 94 71 B2 05 3D C6 78 7A 4D 55 63 8B";
+    Serial.print("GET https://"); Serial.print(host);
+    if (!secureClient.connect(host, 443)) {
+      Serial.println("\nconnection failed");
+      return;
+    }
+
+    if (!secureClient.verify(fingerprint, host)) {
+      Serial.println("\ncertificate doesn't match");
+      return;
+    }
+
+    const char* url = "/update?host=dawn&domain=ceh.bz&password=90abd539fc424917a3cae3d285d8d791&ip=";
+    Serial.print(url); Serial.print(WiFi.localIP());
+
+    secureClient.print("GET "); secureClient.print(url); secureClient.print(WiFi.localIP()); secureClient.print(" HTTP/1.1\r\n");
+    secureClient.print("Host: "); secureClient.print(host); secureClient.print("\r\n");
+    secureClient.print("User-Agent: DynDNSClientESP8266\r\n");
+    secureClient.print("Connection: close\r\n\r\n");
+    secureClient.flush();
+
+    Serial.println();
+    do {
+      Serial.println(secureClient.readStringUntil('\n'));
+    } while (secureClient.connected());
+    secureClient.stop();
+    Serial.println("dawn.ceh.bz registered");
+  }
+
   void setup() {
     if (WiFi.status() != WL_CONNECTED) {
-      Serial.printf("@%u: PANIC connect WiFi before starting server!\n", millis());
+      Serial.printf("@%lu: PANIC connect WiFi before starting server!\n", millis());
       panic();
     }
     if (!MDNS.begin("dawn")) {
-      Serial.printf("@%u: PANIC Error setting up MDNS responder!\n", millis());
+      Serial.printf("@%lu: PANIC Error setting up MDNS responder!\n", millis());
       panic();
     }
-    Serial.printf("@%u: mDNS responder started\n", millis());
+    Serial.printf("@%lu: mDNS responder started\n", millis());
+    registerDynamicDNS();
     server.begin();
-    Serial.printf("@%u: HTTP server started\n", millis());
+    Serial.printf("@%lu: HTTP server started\n", millis());
     MDNS.addService("http", "tcp", 80);
   }
 
@@ -30,22 +64,36 @@ namespace server {
   void sendCommon(const char* s) {
     client.print("HTTP/1.1 ");
     client.println(s);
-    client.println("Content-Type: text/html");
-    client.println("Connection: close");  // the connection will be closed after completion of the response 
+    client.println("Connection: close");  // the connection will be closed after completion of the response
   }
 
   void send200() {
     sendCommon("200 OK");
   }
 
-  void sendResponse() {
+  void getRoot() {
     send200();
+    client.println("Content-Type: text/html");
     client.println();
     client.println("<!DOCTYPE HTML>");
     client.println("<html>");
     CRGB16 color = leds::getColor();
-    client.printf("Current color is %04x %04x %04x", color.r, color.g, color.b);
+    client.printf("Current color is %u %u %u", color.r, color.g, color.b);
     client.println("</html>");
+  }
+
+  void getColor() {
+    CRGB16 color = leds::getColor();
+    const size_t bufferSize = JSON_OBJECT_SIZE(3) + 30;
+    DynamicJsonBuffer jsonBuffer(bufferSize);
+    JsonObject& root = jsonBuffer.createObject();
+    root["r"]=color.r;
+    root["g"]=color.g;
+    root["b"]=color.b;
+    send200();
+    client.println("Content-Type: application/json");
+    client.println();
+    root.printTo(client);
   }
 
   void send404() {
@@ -63,26 +111,23 @@ namespace server {
     JsonObject& root = jsonBuffer.parseObject(client);
 
     JsonObject& color = root["color"];
-    const char* color_r = color["r"];
-    const char* color_g = color["g"];
-    const char* color_b = color["b"];
+    uint16_t r = color["r"];
+    uint16_t g = color["g"];
+    uint16_t b = color["b"];
+    CRGB16 c(r, g, b);
 
-    Serial.printf("@%u: color %s %s %s\n", millis(), color_r, color_g, color_b);
-    if (strlen(color_r) != 4 || strlen(color_g) != 4 || strlen(color_b) != 4) {
-      send400();
-      return;
-    }
-    uint16_t r = strtoul(color_r, 0, 16);
-    uint16_t g = strtoul(color_g, 0, 16);
-    uint16_t b = strtoul(color_b, 0, 16);
-    Serial.printf("@%u: color %04x %04x %04x\n", millis(), r, g, b);
-    leds::setColor(CRGB16(r, g, b));
+    Serial.printf("@%lu: color %u [%04x], %u [%04x], %u [%04x]\n", millis(), c.r, c.r, c.g, c.g, c.b, c.b);
+    leds::setColor(c);
     send200();
   }
 
   void doGet(String path) {
+    if (path == "/color") {
+      getColor();
+      return;
+    }
     if (path == "/") {
-      sendResponse();
+      getRoot();
       return;
     }
     send404();
@@ -94,14 +139,14 @@ namespace server {
       client = server.available();
       if (!client) return;
       clientConnectMillis = millis();
-      Serial.printf("@%u: new client\n", millis());
+      Serial.printf("@%lu: new client\n", millis());
     }
 
     // wait for client to connect (establish connection)
     if (!client.connected()) {
       if (millis() - clientConnectMillis > clientConnectTimeoutMillis) {
         client.stop();
-        Serial.printf("@%u: client timed out waiting to connect\n", millis());
+        Serial.printf("@%lu: client timed out waiting to connect\n", millis());
       }
       return;
     }
@@ -110,14 +155,14 @@ namespace server {
     if (!client.available()) {
       if (millis() - clientConnectMillis > clientAvailableTimeoutMillis) {
         client.stop();
-        Serial.printf("@%u: client timed out waiting for data\n", millis());
+        Serial.printf("@%lu: client timed out waiting for data\n", millis());
       }
       return;
     }
 
     String req = client.readStringUntil('\n');
     req.trim();
-    Serial.printf("@%u: got request\n", millis());
+    Serial.printf("@%lu: got request\n", millis());
     Serial.println(req);
     String s;
     do {
@@ -131,11 +176,11 @@ namespace server {
     int path_start = req.indexOf(' ');
     int path_end = req.indexOf(' ', path_start + 1);
     if (path_start == -1) {
-      Serial.printf("@%u: Invalid request\n", millis());
+      Serial.printf("@%lu: Invalid request\n", millis());
       return;
     }
     if (path_end == -1) {
-      Serial.printf("@%u: Invalid path\n", millis());
+      Serial.printf("@%lu: Invalid path\n", millis());
       return;
     }
     String request = req.substring(0, path_start).c_str();
@@ -145,11 +190,11 @@ namespace server {
     } else if (request == "POST") {
       doPost(path);
     } else {
-      Serial.printf("@%u: unknown request\n", millis());
+      Serial.printf("@%lu: unknown request\n", millis());
     };
     client.flush();
 
-    Serial.printf("@%u: finished request\n", millis());
+    Serial.printf("@%lu: finished request\n", millis());
     client.stop();
   }
 }

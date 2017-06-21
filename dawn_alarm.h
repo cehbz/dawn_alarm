@@ -9,9 +9,9 @@
 #define DEBUG_PRINT(...) Serial.print(__VA_ARGS__)
 #define DEBUG_PRINTLN(...) Serial.println(__VA_ARGS__)
 #else
-#define DEBUG_PRINTF(...) 0
-#define DEBUG_PRINT(...) 0
-#define DEBUG_PRINTLN(...) 0
+#define DEBUG_PRINTF(...)
+#define DEBUG_PRINT(...)
+#define DEBUG_PRINTLN(...)
 #endif
 
 #endif
