@@ -26,6 +26,7 @@ static const ColorAtTime segments[] = {
     ColorAtTime(4, CRGB(Candle)),
   };
 
+#define DEBUG_LEDS
   static const int segments_len = sizeof(segments)/sizeof(segments[0]);
   uint32_t endDuration[segments_len];
   int segmentIndex = 0;
@@ -81,25 +82,35 @@ static const ColorAtTime segments[] = {
 
   CRGB16 lastSetColor;
   CRGB16 getColor() {
-    if (startTime == 0) return lastSetColor;
-    uint32_t t = millis()-startTime;
-    LEDS_DEBUG_PRINTF("t %u", t);
+    if (startTime == 0) {
+      return lastSetColor;
+    }
+#ifndef DEBUG_DAWN
+    uint32_t t = millis();
+#else
+    uint32_t t = millis()*60;
+#endif
+    if (t <= startTime) {
+      return CRGB16(0,0,0);
+    }
+    t -= startTime;
+    DEBUG_LEDS_PRINT("t %u", t);
     while (segmentIndex < segments_len && endDuration[segmentIndex] <= t) {
       segmentIndex++;
     };
-    LEDS_DEBUG_PRINTF(", [%d]", segmentIndex);
+    DEBUG_LEDS_PRINT(", [%d]", segmentIndex);
     if (segmentIndex >= segments_len) {
       stop(); // all done
       return segments[segments_len-1].color;
     }
     uint32_t start = (segmentIndex == 0 ? 0 : endDuration[segmentIndex -1]);
-    LEDS_DEBUG_PRINTF(", range [%d..%d]", start, endDuration[segmentIndex]);
+    DEBUG_LEDS_PRINT(", range [%d..%d]", start, endDuration[segmentIndex]);
     CRGB16 color  = (segmentIndex == 0 ? CRGB16(0,0,0) : segments[segmentIndex-1].color);
     fract16 f = (t-start)*(0x10000)/(endDuration[segmentIndex]-start);
-    LEDS_DEBUG_PRINTF(", nblend16([%04x%04x%04x..%04x%04x%04x], .%03d [%d])",
+    DEBUG_LEDS_PRINT(", nblend16([%04x%04x%04x..%04x%04x%04x], .%03d [%d])",
                       color.r, color.g, color.b,
                       segments[segmentIndex].color.r, segments[segmentIndex].color.g, segments[segmentIndex].color.b,
-                      f*1000/(0x10000), f);
+                      f*1000/0x10000, f);
     return nblend16(color, CRGB16(segments[segmentIndex].color), f);
   }
 
@@ -108,15 +119,15 @@ static const ColorAtTime segments[] = {
     if (c < 0) {
       error = c;
       component = 0;
-      LEDS_DEBUG_PRINT("<");
+      DEBUG_LEDS_PRINT("<");
     } else if (c > 65535) {
       error = c - 65535;
       component = 65535;
-      LEDS_DEBUG_PRINT(">");
+      DEBUG_LEDS_PRINT(">");
     } else {
       error = 0;
       component = c;
-      LEDS_DEBUG_PRINT("=");
+      DEBUG_LEDS_PRINT("=");
     }
   }
 
@@ -124,28 +135,23 @@ static const ColorAtTime segments[] = {
   int16_t errorG = 0;
   int16_t errorB = 0;
 
-  uint32_t lastSS = 0;
   void setColor(const CRGB16& color) {
-    uint32_t SS = 0;
     lastSetColor = color;
     for (int i = 0; i<NUM_LEDS; i++) {
       CRGB16 c(color);
-      LEDS_DEBUG_PRINTF("start error: %+4d, %+4d, %+4d ", errorR, errorG, errorB);
+      DEBUG_LEDS_PRINT("start error: %+4d, %+4d, %+4d ", errorR, errorG, errorB);
       updateComponentAndError(c.r, errorR);
       updateComponentAndError(c.g, errorG);
       updateComponentAndError(c.b, errorB);
       CRGB c8 = c.CRGB16to8();
       leds[i] = c8;
-      SS += c8.r*c8.r+c8.g*c8.g+c8.b*c8.b;
-      LEDS_DEBUG_PRINTF(", led[%2d] %02x%02x%02x", i, leds[i].r, leds[i].g, leds[i].b);
+      DEBUG_LEDS_PRINT(", led[%2d] %02x%02x%02x", i, leds[i].r, leds[i].g, leds[i].b);
       errorR += c.r-(c8.r<<8);
       errorG += c.g-(c8.g<<8);
       errorB += c.b-(c8.b<<8);
-      LEDS_DEBUG_PRINTF(", end error: %+4d, %+4d, %+4d", errorR, errorG, errorB);
-      LEDS_DEBUG_PRINTLN();
+      DEBUG_LEDS_PRINT(", end error: %+4d, %+4d, %+4d", errorR, errorG, errorB);
+      DEBUG_LEDS_PRINT("\n");
     }
-    DEBUG_PRINTF("@%lu, sum squared: %3lu, delta:%3ld\n", millis(), SS, SS-lastSS);
-    lastSS = SS;
     FastLED.show();
     FastLED.delay(0);
   }
@@ -153,12 +159,12 @@ static const ColorAtTime segments[] = {
   void loop() {
     if (startTime == 0) return; // not running
     CRGB16 color = getColor();
-    LEDS_DEBUG_PRINTF(", color %04x%04x%04x\n", color.r, color.g, color.b);
+    DEBUG_LEDS_PRINT(", color %04x%04x%04x\n", color.r, color.g, color.b);
     setColor(color);
-    LEDS_DEBUG_PRINTLN();
+    DEBUG_LEDS_PRINT("\n");
     frames++;
     if (millis()>=fpsEndTime) {
-      DEBUG_PRINTF("@%lu, %d fps\n", millis(), frames);
+      DEBUG_PRINT("@%lu, %d fps\n", millis(), frames);
       fpsEndTime = millis()+1000;
       frames = 0;
     }
@@ -167,11 +173,17 @@ static const ColorAtTime segments[] = {
   void start(int duration) {
     setEndDurations(duration);
     segmentIndex = 0;
+#ifndef DEBUG_DAWN
     startTime = millis();
+#else
+    startTime = millis()*60;
+#endif
+    DEBUG_PRINT("start: startTime: %d\n", startTime);
   }
 
   void stop() {
-    startTime = 0;
+  startTime = 0;
+  DEBUG_PRINT("stop: startTime: %d\n", startTime);
   }
 
   void clear() {

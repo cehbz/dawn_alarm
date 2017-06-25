@@ -3,17 +3,13 @@
 
 #include "crgb16.h"
 
-// #define LEDS_DEBUG
-#undef LEDS_DEBUG
+// #define DEBUG_LEDS
+#undef DEBUG_LEDS
 
-#ifdef LEDS_DEBUG
-#define LEDS_DEBUG_PRINTF(...) Serial.printf(__VA_ARGS__)
-#define LEDS_DEBUG_PRINT(...) Serial.print(__VA_ARGS__)
-#define LEDS_DEBUG_PRINTLN(...) Serial.println(__VA_ARGS__)
+#ifdef DEBUG_LEDS
+#define DEBUG_LEDS_PRINT(...) Serial.printf(__VA_ARGS__)
 #else
-#define LEDS_DEBUG_PRINTF(...)
-#define LEDS_DEBUG_PRINT(...)
-#define LEDS_DEBUG_PRINTLN(...)
+#define DEBUG_LEDS_PRINT(...)
 #endif
 
 namespace leds {

@@ -7,11 +7,7 @@
 
 void MorningAlarm() {
   Serial.println("MorningAlarm");
-#ifdef NDEBUG
   leds::start(1*SECS_PER_HOUR*1000);
-#else
-  leds::start(1*SECS_PER_MIN*1000);
-#endif
 }
 
 void setup() {
@@ -20,7 +16,7 @@ void setup() {
   ntp::setup();
   leds::setup();
   server::setup();
-#ifdef NDEBUG
+#ifndef DEBUG_DAWN
   Alarm.alarmRepeat(6,0,0, MorningAlarm);
 #else
   Alarm.alarmOnce(hour(now()), minute(now()), second(now())+1, MorningAlarm);
