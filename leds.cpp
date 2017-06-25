@@ -106,7 +106,7 @@ static const ColorAtTime segments[] = {
     uint32_t start = (segmentIndex == 0 ? 0 : endDuration[segmentIndex -1]);
     DEBUG_LEDS_PRINT(", range [%d..%d]", start, endDuration[segmentIndex]);
     CRGB16 color  = (segmentIndex == 0 ? CRGB16(0,0,0) : segments[segmentIndex-1].color);
-    fract16 f = (t-start)*(0x10000)/(endDuration[segmentIndex]-start);
+    fract16 f = uint64_t(t-start)*0x10000/(endDuration[segmentIndex]-start);
     DEBUG_LEDS_PRINT(", nblend16([%04x%04x%04x..%04x%04x%04x], .%03d [%d])",
                       color.r, color.g, color.b,
                       segments[segmentIndex].color.r, segments[segmentIndex].color.g, segments[segmentIndex].color.b,
