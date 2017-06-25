@@ -64,6 +64,7 @@ namespace server {
   void sendCommon(const char* s) {
     client.print("HTTP/1.1 ");
     client.println(s);
+    client.println("Access-Control-Allow-Origin: *");
     client.println("Connection: close");  // the connection will be closed after completion of the response
   }
 
