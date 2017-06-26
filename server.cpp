@@ -105,7 +105,7 @@ namespace server {
     sendCommon("400 Bad Request");
   }
 
-  void doPost(String path) {
+  void doPostColor() {
     const size_t bufferSize = JSON_OBJECT_SIZE(3) + 30;
     DynamicJsonBuffer jsonBuffer(bufferSize);
 
@@ -119,6 +119,33 @@ namespace server {
     Serial.printf("@%lu: color %u [%04x], %u [%04x], %u [%04x]\n", millis(), c.r, c.r, c.g, c.g, c.b, c.b);
     leds::setColor(c);
     send200();
+  }
+
+  void doPostColors() {
+    const size_t bufferSize = JSON_ARRAY_SIZE(leds::NUM_LEDS) + leds::NUM_LEDS*JSON_OBJECT_SIZE(3) + 30*leds::NUM_LEDS;
+    DynamicJsonBuffer jsonBuffer(bufferSize);
+
+    JsonArray& root = jsonBuffer.parseArray(client);
+    CRGB16 leds[leds::NUM_LEDS];
+    for (int i = 0; i < leds::NUM_LEDS; i++) {
+      JsonObject& r = root[i];
+      leds[i] = CRGB16(r["r"], r["g"], r["b"]);
+    }
+
+    leds::setColors(leds);
+    send200();
+  }
+
+  void doPost(String path) {
+    if (path == "/color") {
+      getColor();
+      return;
+    }
+    if (path == "/") {
+      getRoot();
+      return;
+    }
+    send404();
   }
 
   void doOptions(String path) {

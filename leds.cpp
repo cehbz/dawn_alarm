@@ -2,9 +2,9 @@
 #include "leds.h"
 #include <FastLED.h>
 #include "crgb16.h"
+#include "crgb32.h"
 
 namespace leds {
-  static const int NUM_LEDS = 30;
   static const int DATA_PIN = 1; // D1, GPIO5
   CRGB leds[NUM_LEDS];
 
@@ -114,7 +114,7 @@ static const ColorAtTime segments[] = {
     return nblend16(color, CRGB16(segments[segmentIndex].color), f);
   }
 
-  void updateComponentAndError(uint16_t& component, int16_t& error) {
+  void updateOneComponentAndError(uint16_t& component, int16_t& error) {
     int c = component + error;
     if (c < 0) {
       error = c;
@@ -131,29 +131,59 @@ static const ColorAtTime segments[] = {
     }
   }
 
-  int16_t errorR = 0;
-  int16_t errorG = 0;
-  int16_t errorB = 0;
+  struct Error16 {
+    int16_t r;
+    int16_t g;
+    int16_t b;
 
-  void setColor(const CRGB16& color) {
-    lastSetColor = color;
+  // default values are UNINITIALIZED
+  inline Error16() __attribute__((always_inline)) {}
+
+  // allow construction from signed 16 bit R, G, B
+  inline Error16( int16_t ir, int16_t ig, int16_t ib)  __attribute__((always_inline)) : r(ir), g(ig), b(ib) {}
+  };
+
+  void updateComponentAndError(CRGB16& c, Error16& e) {
+    updateOneComponentAndError(c.r, e.r);
+    updateOneComponentAndError(c.g, e.g);
+    updateOneComponentAndError(c.b, e.b);
+  }
+
+  Error16 error(0,0,0);
+
+  void setColors(const CRGB16* leds16) {
+    CRGB32 avg(0,0,0);
     for (int i = 0; i<NUM_LEDS; i++) {
-      CRGB16 c(color);
-      DEBUG_LEDS_PRINT("start error: %+4d, %+4d, %+4d ", errorR, errorG, errorB);
-      updateComponentAndError(c.r, errorR);
-      updateComponentAndError(c.g, errorG);
-      updateComponentAndError(c.b, errorB);
+      CRGB16 c(leds16[i]);
+      DEBUG_LEDS_PRINT("start error: %+4d, %+4d, %+4d ", error.r, error.g, error.b);
+      updateComponentAndError(c, error);
       CRGB c8 = c.CRGB16to8();
       leds[i] = c8;
       DEBUG_LEDS_PRINT(", led[%2d] %02x%02x%02x", i, leds[i].r, leds[i].g, leds[i].b);
-      errorR += c.r-(c8.r<<8);
-      errorG += c.g-(c8.g<<8);
-      errorB += c.b-(c8.b<<8);
-      DEBUG_LEDS_PRINT(", end error: %+4d, %+4d, %+4d", errorR, errorG, errorB);
+      CRGB16 c16(c8);
+      avg.r += c16.r;
+      avg.g += c16.g;
+      avg.b += c16.b;
+      error.r += c.r-c16.r;
+      error.g += c.g-c16.g;
+      error.b += c.b-c16.b;
+      DEBUG_LEDS_PRINT(", end error: %+4d, %+4d, %+4d", error.r, error.g, error.b);
       DEBUG_LEDS_PRINT("\n");
     }
+    lastSetColor = CRGB16(
+                          (avg.r+NUM_LEDS/2)/NUM_LEDS,
+                          (avg.g+NUM_LEDS/2)/NUM_LEDS,
+                          (avg.b+NUM_LEDS/2)/NUM_LEDS);
     FastLED.show();
     FastLED.delay(0);
+  }
+
+  void setColor(const CRGB16& color) {
+    CRGB16 leds16[NUM_LEDS];
+    for (int i = 0; i<NUM_LEDS; i++) {
+      leds16[i] = color;
+    }
+    setColors(leds16);
   }
 
   void loop() {
@@ -164,7 +194,7 @@ static const ColorAtTime segments[] = {
     DEBUG_LEDS_PRINT("\n");
     frames++;
     if (millis()>=fpsEndTime) {
-      DEBUG_PRINT("@%lu, %d fps\n", millis(), frames);
+      DEBUG_PRINT("@%lu, %d fps [%04x, %04x, %04x]\n", millis(), frames, color.r, color.g, color.b);
       fpsEndTime = millis()+1000;
       frames = 0;
     }

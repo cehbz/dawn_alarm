@@ -13,8 +13,10 @@
 #endif
 
 namespace leds {
+  static const int NUM_LEDS = 30;
   CRGB16 getColor();
   void setColor(const CRGB16& color);
+  void setColors(const CRGB16* leds);
   void setup();
   void loop();
   void start(int duration);
