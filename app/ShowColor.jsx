@@ -1,68 +1,56 @@
 import React, { Component } from 'react';
-import reactCSS from 'reactcss';
-import { getColor } from './Utils';
+import { SketchPicker } from 'react-color';
+import tinycolor from 'tinycolor2';
 
-export default class ContractsShow extends Component {
-  constructor() {
-    super();
+import { getColor, setColor } from './Utils';
 
-    let state = {
-      color: {
-        r: '241',
-        g: '112',
-        b: '19',
-        a: '1',
-      },
-    };
-  }
+let rgb16toColor = color => {
+  return tinycolor({ r: color.r >> 8, g: color.g >> 8, b: color.b >> 8 });
+};
 
-  componentWillMount() {
-    this.getColor();
-  }
+let colorToRGB16 = color => {
+  return { r: color.r << 8, g: color.g << 8, b: color.b << 8 };
+};
 
-  getColor() {
+export default class ShowColor extends Component {
+  state = {
+    color: '#f19f',
+  };
+
+  getColor = () => {
     getColor().then(color => {
-      this.setState({ color });
+      if (typeof color != 'undefined') {
+        this.setState({ color: rgb16toColor(color).toHexString() });
+      }
     });
-  }
+  };
+
+  componentWillMount = () => {
+    this.getColor();
+  };
+
+  handleChangeComplete = color => {
+    let c = colorToRGB16(color.rgb);
+    setColor(c);
+    this.setState({ color: color.hex });
+  };
 
   render() {
-    const styles = reactCSS({
-      default: {
-        ledemitter: {
-          width: '36px',
-          height: '36px',
-          borderRadius: '18px',
-          background: `rgba(${this.state.color.r}, ${this.state.color.g}, ${this
-            .state.color.b}, ${this.state.color.a})`,
-        },
-        ledframe: {
-          padding: '5px',
-          background: '#fff',
-          borderRadius: '1px',
-          boxShadow: '0 0 0 1px rgba(0,0,0,.1)',
-          display: 'inline-block',
-          cursor: 'pointer',
-        },
-        popover: {
-          position: 'absolute',
-          zIndex: '2',
-        },
-        cover: {
-          position: 'fixed',
-          top: '0px',
-          right: '0px',
-          bottom: '0px',
-          left: '0px',
-        },
-      },
-    });
-
     return (
       <div>
-        <div style={styles.ledframe}>
-          <div style={styles.ledemitter} />
+        <div className="ledframe">
+          <div
+            className="ledemitter"
+            style={{ background: this.state.color }}
+          />
         </div>
+        <SketchPicker
+          color={this.state.color}
+          onChangeComplete={this.handleChangeComplete}
+        />
+        <pre>
+          Color: {JSON.stringify(this.state.color)}
+        </pre>
       </div>
     );
   }

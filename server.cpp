@@ -106,20 +106,25 @@ namespace server {
   }
 
   void doPost(String path) {
-    const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(3) + 30;
+    const size_t bufferSize = JSON_OBJECT_SIZE(3) + 30;
     DynamicJsonBuffer jsonBuffer(bufferSize);
 
     JsonObject& root = jsonBuffer.parseObject(client);
 
-    JsonObject& color = root["color"];
-    uint16_t r = color["r"];
-    uint16_t g = color["g"];
-    uint16_t b = color["b"];
+    uint16_t r = root["r"];
+    uint16_t g = root["g"];
+    uint16_t b = root["b"];
     CRGB16 c(r, g, b);
 
     Serial.printf("@%lu: color %u [%04x], %u [%04x], %u [%04x]\n", millis(), c.r, c.r, c.g, c.g, c.b, c.b);
     leds::setColor(c);
     send200();
+  }
+
+  void doOptions(String path) {
+    send200();
+    client.println("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+    client.println("Access-Control-Allow-Headers: content-type");
   }
 
   void doGet(String path) {
@@ -190,6 +195,8 @@ namespace server {
       doGet(path);
     } else if (request == "POST") {
       doPost(path);
+    } else if (request == "OPTIONS") {
+      doOptions(path);
     } else {
       Serial.printf("@%lu: unknown request\n", millis());
     };
