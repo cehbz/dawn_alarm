@@ -2,55 +2,46 @@ import React, { Component } from 'react';
 import { SketchPicker } from 'react-color';
 import tinycolor from 'tinycolor2';
 
-import { getColor, setColor } from './Utils';
-
-let rgb16toColor = color => {
-  return tinycolor({ r: color.r >> 8, g: color.g >> 8, b: color.b >> 8 });
-};
-
-let colorToRGB16 = color => {
-  return { r: color.r << 8, g: color.g << 8, b: color.b << 8 };
-};
+// TODO use ReactProps to declare our props
 
 export default class ShowColor extends Component {
   state = {
-    color: '#f19f',
+    displayColorPicker: false,
+    color: tinycolor(this.props.color),
   };
 
-  getColor = () => {
-    getColor().then(color => {
-      if (typeof color != 'undefined') {
-        this.setState({ color: rgb16toColor(color).toHexString() });
-      }
-    });
+  handleClick = () => {
+    this.setState({ displayColorPicker: !this.state.displayColorPicker });
   };
 
-  componentWillMount = () => {
-    this.getColor();
+  handleClose = () => {
+    this.setState({ displayColorPicker: false });
   };
 
-  handleChangeComplete = color => {
-    let c = colorToRGB16(color.rgb);
-    setColor(c);
-    this.setState({ color: color.hex });
+  handleChange = color => {
+    let c = tinycolor(color.rgb);
+    this.setState({ color: c });
+    this.props.handleChange(c);
   };
 
   render() {
     return (
       <div>
-        <div className="ledframe">
+        <div className="ledframe" onClick={this.handleClick}>
           <div
             className="ledemitter"
-            style={{ background: this.state.color }}
+            style={{ background: this.state.color.toHexString() }}
           />
         </div>
-        <SketchPicker
-          color={this.state.color}
-          onChangeComplete={this.handleChangeComplete}
-        />
-        <pre>
-          Color: {JSON.stringify(this.state.color)}
-        </pre>
+        {this.state.displayColorPicker
+          ? <div className="popover">
+              <div className="cover" onClick={this.handleClose} />
+              <SketchPicker
+                color={this.state.color}
+                onChangeComplete={this.handleChange}
+              />
+            </div>
+          : null}
       </div>
     );
   }
