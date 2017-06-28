@@ -5,12 +5,6 @@ extends:
 parser: babel-eslint
 plugins:
   - prettier
-rules:
-  prettier/prettier:
-    - error
-    -
-      singleQuote: true
-      trailingComma: all
 parserOptions:
   ecmaVersion: 2016
   sourceType: module

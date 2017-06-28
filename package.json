@@ -10,16 +10,18 @@
     "test": "npm run lint && karma start --single-run --log-level debug",
     "prebuild": "npm test",
     "dev": "webpack-dev-server --hot --inline --env.dev --port 8082",
-    "lint": "eslint index.js spec/*.js app/**/*.js app/**/*.jsx"
+    "lint": "eslint *.{js,jsx} {spec,app}/**/*.{js,jsx}"
   },
   "author": "",
   "dependencies": {
     "axios": "^0.16.2",
+    "d3-scale": "^1.0.6",
     "font-awesome": "^4.7.0",
     "prop-types": "^15.5.10",
     "react": "^15.5.4",
     "react-color": "^2.13.0",
     "react-dom": "^15.5.4",
+    "react-props": "^0.0.3",
     "react-router": "^4.1.1",
     "react-router-dom": "^4.1.1",
     "tinycolor2": "^1.4.1",
@@ -63,6 +65,7 @@
     "style-loader": "^0.18.2",
     "webpack": "^3.0.0",
     "webpack-config-utils": "^2.3.0",
+    "webpack-dev-middleware": "^1.11.0",
     "webpack-dev-server": "^2.5.0"
   },
   "pre-push": []

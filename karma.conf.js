@@ -1,4 +1,4 @@
-module.exports = function(config) {
+module.exports = config => {
   config.set({
     frameworks: ['jasmine'],
 
@@ -8,19 +8,19 @@ module.exports = function(config) {
       'node_modules/babel-polyfill/dist/polyfill.js',
       'app/**/*.js',
       'spec/SpecHelper.js',
-      'spec/**/*Spec.js'
+      'spec/**/*Spec.js',
     ],
 
     plugins: [
       'karma-jasmine',
       'karma-phantomjs-launcher',
       'karma-sourcemap-loader',
-      'karma-webpack'
+      'karma-webpack',
     ],
 
     preprocessors: {
       'app/**/*.js': ['webpack', 'sourcemap'],
-      'spec/**/*.js': ['webpack', 'sourcemap']
+      'spec/**/*.js': ['webpack', 'sourcemap'],
     },
 
     webpack: {
@@ -30,15 +30,15 @@ module.exports = function(config) {
             test: /\.js$/,
             exclude: /\/node_modules\//,
             loader: 'babel-loader',
-          }
-        ]
+          },
+        ],
       },
       externals: {
-        'cheerio': 'window',
+        cheerio: 'window',
         'react/addons': true,
         'react/lib/ExecutionEnvironment': true,
-        'react/lib/ReactContext': true
-      }
-    }
-  })
-}
+        'react/lib/ReactContext': true,
+      },
+    },
+  });
+};
