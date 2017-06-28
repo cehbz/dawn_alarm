@@ -1,23 +1,24 @@
 import React, { Component } from 'react';
-import ReactProps from 'react-props';
+import PropTypes from 'prop-types';
 import { SketchPicker } from 'react-color';
 import tinycolor from 'tinycolor2';
 
-// TODO use ReactProps to declare our props
-
 export default class ShowColor extends Component {
-  propTypes = {
-    color: {
-      r: ReactProps.string.isRequired,
-      g: ReactProps.string.isRequired,
-      b: ReactProps.string.isRequired,
-    }.isRequired,
-    handleChange: ReactProps.func.isRequired,
+  static propTypes = {
+    color: PropTypes.shape({
+      toHexString: PropTypes.func.isRequired,
+    }).isRequired,
+    handleChange: PropTypes.func.isRequired,
+  };
+
+  static defaultProps = {
+    color: tinycolor('#f19'),
+    handleChange: () => {},
   };
 
   state = {
     displayColorPicker: false,
-    color: tinycolor(this.props.color),
+    color: this.props.color,
   };
 
   handleClick = () => {

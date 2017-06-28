@@ -1,6 +1,6 @@
 /* eslint-env browser */
 
-import d3 from 'd3-scale';
+// import d3 from 'd3-scale';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import tinycolor from 'tinycolor2';

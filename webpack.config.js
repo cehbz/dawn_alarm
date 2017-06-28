@@ -7,7 +7,7 @@ module.exports = env => {
   const { ifProd, ifNotProd } = getIfUtils(env);
 
   return {
-    entry: './index.js',
+    entry: './index.jsx',
     context: __dirname,
     output: {
       path: path.resolve(__dirname, './build'),

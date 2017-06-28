@@ -21,7 +21,6 @@
     "react": "^15.5.4",
     "react-color": "^2.13.0",
     "react-dom": "^15.5.4",
-    "react-props": "^0.0.3",
     "react-router": "^4.1.1",
     "react-router-dom": "^4.1.1",
     "tinycolor2": "^1.4.1",
