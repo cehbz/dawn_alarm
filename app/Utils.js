@@ -11,7 +11,7 @@ function getColor() {
 }
 
 function setColor(color) {
-  let colors = [];
+  const colors = [];
   for (let i = 0; i < 30; i++) {
     colors[i] = color;
   }
@@ -25,7 +25,7 @@ function setColors(colors) {
     .then(response => response.data)
     .catch(error => {
       console.log(
-        `setColor: error in axios.post('${url}', ${JSON.stringify(colors)})`
+        `setColor: error in axios.post('${url}', ${JSON.stringify(colors)})`,
       );
       console.log(error);
     });

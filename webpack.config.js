@@ -1,5 +1,5 @@
 /* jshint esversion:6 */
-const { resolve } = require('path');
+const path = require('path');
 const webpack = require('webpack');
 const { getIfUtils, removeEmpty } = require('webpack-config-utils');
 
@@ -10,7 +10,7 @@ module.exports = env => {
     entry: './index.js',
     context: __dirname,
     output: {
-      path: resolve(__dirname, './build'),
+      path: path.resolve(__dirname, './build'),
       filename: 'bundle.js',
       publicPath: '/build/',
       pathinfo: ifNotProd(),
@@ -25,7 +25,11 @@ module.exports = env => {
     },
     module: {
       loaders: [
-        { test: /\.jsx?$/, exclude: /node_modules/, loader: 'babel-loader' },
+        {
+          test: /\.jsx?$/,
+          exclude: /node_modules/,
+          loader: 'babel-loader',
+        },
         {
           test: /(\.css|\.scss)/,
           loader: 'style-loader!css-loader!resolve-url-loader!sass-loader',

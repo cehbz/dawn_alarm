@@ -1,4 +1,7 @@
-extends: prettier
+extends:
+  - airbnb
+  - prettier
+  - prettier/react
 parser: babel-eslint
 plugins:
   - prettier
@@ -7,4 +10,13 @@ rules:
     - error
     -
       singleQuote: true
-      trailingComma: "es5"
+      trailingComma: all
+parserOptions:
+  ecmaVersion: 2016
+  sourceType: module
+  ecmaFeatures:
+    jsx: true
+  env:
+    es6: true,
+    browser: true,
+    node: true

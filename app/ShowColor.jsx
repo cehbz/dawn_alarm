@@ -19,7 +19,7 @@ export default class ShowColor extends Component {
   };
 
   handleChange = color => {
-    let c = tinycolor(color.rgb);
+    const c = tinycolor(color.rgb);
     this.setState({ color: c });
     this.props.handleChange(c);
   };
