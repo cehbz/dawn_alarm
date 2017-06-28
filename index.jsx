@@ -1,6 +1,6 @@
 /* eslint-env browser */
 
-// import d3 from 'd3-scale';
+import * as d3scale from 'd3-scale';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import tinycolor from 'tinycolor2';
@@ -31,8 +31,8 @@ const handleStartChange = color => {
 
 const handleEndChange = color => {
   endColor = color;
-  const colorScale = d3.scale
-    .linear()
+  const colorScale = d3scale
+    .scaleLinear()
     .domain([0, 29])
     .range([startColor.toHexString(), endColor.toHexString()]);
   const colors = [];
