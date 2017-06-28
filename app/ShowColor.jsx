@@ -2,11 +2,12 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { SketchPicker } from 'react-color';
 import tinycolor from 'tinycolor2';
+import * as d3color from 'd3-color';
 
 export default class ShowColor extends Component {
   static propTypes = {
     color: PropTypes.shape({
-      toHexString: PropTypes.func.isRequired,
+      rgb: PropTypes.func.isRequired,
     }).isRequired,
     handleChange: PropTypes.func.isRequired,
   };
@@ -18,7 +19,7 @@ export default class ShowColor extends Component {
 
   state = {
     displayColorPicker: false,
-    color: this.props.color,
+    color: tinycolor(this.props.color.toString()),
   };
 
   handleClick = () => {
@@ -32,7 +33,7 @@ export default class ShowColor extends Component {
   handleChange = color => {
     const c = tinycolor(color.rgb);
     this.setState({ color: c });
-    this.props.handleChange(c);
+    this.props.handleChange(d3color.color(c));
   };
 
   render() {
