@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { SketchPicker } from 'react-color';
-import tinycolor from 'tinycolor2';
 import * as d3color from 'd3-color';
 
 export default class ShowColor extends Component {
@@ -13,13 +12,13 @@ export default class ShowColor extends Component {
   };
 
   static defaultProps = {
-    color: tinycolor('#f19'),
+    color: d3color.rgb('#f19'),
     handleChange: () => {},
   };
 
   state = {
     displayColorPicker: false,
-    color: tinycolor(this.props.color.toString()),
+    color: this.props.color,
   };
 
   handleClick = () => {
@@ -31,9 +30,9 @@ export default class ShowColor extends Component {
   };
 
   handleChange = color => {
-    const c = tinycolor(color.rgb);
+    const c = d3color.rgb(color.rgb.r, color.rgb.g, color.rgb.b);
     this.setState({ color: c });
-    this.props.handleChange(d3color.color(c));
+    this.props.handleChange(c);
   };
 
   render() {
@@ -42,7 +41,7 @@ export default class ShowColor extends Component {
         <button className="ledframe" onClick={this.handleClick}>
           <div
             className="ledemitter"
-            style={{ background: this.state.color.toHexString() }}
+            style={{ background: this.state.color }}
           />
         </button>
         {this.state.displayColorPicker

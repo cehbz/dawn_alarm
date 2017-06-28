@@ -18,10 +18,6 @@ getColor().then(c => {
   if (typeof c !== 'undefined') {
     startColor = rgb16toColor(c);
     endColor = startColor;
-    console.log('getColor');
-    console.log(c);
-    console.log(startColor);
-    console.log(endColor);
   }
 });
 
@@ -42,7 +38,6 @@ const handleEndChange = color => {
     colors[i] = colorToRGB16(d3color.rgb(colorScale(i)));
   }
   setColors(colors);
-  console.log(colors);
 };
 
 ReactDOM.render(
