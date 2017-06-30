@@ -68,7 +68,7 @@ struct CRGB16 {
   }
 
   // convert CRGB16 to CRGB 8 bit
-  inline CRGB CRGB16to8() __attribute__((always_inline))
+  inline CRGB CRGB16to8() const __attribute__((always_inline))
   {
     return CRGB(
                 qadd16(r,0x80)>>8,

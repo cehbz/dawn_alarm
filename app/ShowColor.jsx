@@ -6,7 +6,9 @@ import * as d3color from 'd3-color';
 export default class ShowColor extends Component {
   static propTypes = {
     color: PropTypes.shape({
-      rgb: PropTypes.func.isRequired,
+      r: PropTypes.number.isRequired,
+      g: PropTypes.number.isRequired,
+      b: PropTypes.number.isRequired,
     }).isRequired,
     handleChange: PropTypes.func.isRequired,
   };
@@ -18,7 +20,13 @@ export default class ShowColor extends Component {
 
   state = {
     displayColorPicker: false,
-    color: this.props.color,
+    color: this.props.color.toString(),
+  };
+
+  componentWillReceiveProps = nextProps => {
+    if (nextProps.color === this.props.color) return;
+    const c = d3color.rgb(nextProps.color);
+    this.setState({ color: c });
   };
 
   handleClick = () => {

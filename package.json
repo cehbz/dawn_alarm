@@ -16,6 +16,7 @@
   "dependencies": {
     "axios": "^0.16.2",
     "d3-color": "^1.0.3",
+    "d3-interpolate": "^1.1.5",
     "d3-scale": "^1.0.6",
     "font-awesome": "^4.7.0",
     "prop-types": "^15.5.10",
@@ -24,7 +25,6 @@
     "react-dom": "^15.5.4",
     "react-router": "^4.1.1",
     "react-router-dom": "^4.1.1",
-    "tinycolor2": "^1.4.1",
     "uglify-js": "3"
   },
   "devDependencies": {

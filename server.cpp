@@ -141,9 +141,30 @@ namespace server {
     for (int i = 0; i < leds::NUM_LEDS; i++) {
       JsonObject& r = root[i];
       leds[i] = CRGB16(r["r"], r["g"], r["b"]);
+      Serial.printf("@%lu: leds[%2d] %u [%04x], %u [%04x], %u [%04x]\n", millis(), i, leds[i].r, leds[i].r, leds[i].g, leds[i].g, leds[i].b, leds[i].b);
     }
 
     leds::setColors(leds);
+    send200();
+  }
+
+  void doPostInterpolate(String path) {
+    const size_t bufferSize = JSON_OBJECT_SIZE(2) + 2*JSON_OBJECT_SIZE(3) + 70;
+    DynamicJsonBuffer jsonBuffer(bufferSize);
+
+    JsonObject& root = jsonBuffer.parseObject(client);
+    if (!root.success()) {
+      Serial.printf("parse failed\n");
+      send400();
+      return;
+    }
+
+    CRGB16 start(root["start"]["r"], root["start"]["g"], root["start"]["b"]);
+    CRGB16 end(root["end"]["r"], root["end"]["g"], root["end"]["b"]);
+
+    Serial.printf("@%lu: start color %u [%04x], %u [%04x], %u [%04x]\n", millis(), start.r, start.r, start.g, start.g, start.b, start.b);
+    Serial.printf("@%lu: end color %u [%04x], %u [%04x], %u [%04x]\n", millis(), end.r, end.r, end.g, end.g, end.b, end.b);
+    leds::interpolate(start, end);
     send200();
   }
 
@@ -154,6 +175,10 @@ namespace server {
     }
     if (path == "/colors") {
       doPostColors(path);
+      return;
+    }
+    if (path == "/interpolate") {
+      doPostInterpolate(path);
       return;
     }
     send404();

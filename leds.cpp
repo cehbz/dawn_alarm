@@ -31,7 +31,7 @@ static const ColorAtTime segments[] = {
   uint32_t endDuration[segments_len];
   int segmentIndex = 0;
   uint32_t sum = 0;
-  uint32_t startTime = 0;
+  uint32_t fadeTime = 0;
 
   void setEndDurations(uint32_t duration) {
     uint32_t end = 0;
@@ -80,28 +80,39 @@ static const ColorAtTime segments[] = {
     frames = 0;
   }
 
-  CRGB16 lastSetColor;
-  CRGB16 getColor() {
-    if (startTime == 0) {
-      return lastSetColor;
+  CRGB16 buf[NUM_LEDS];
+  void setNoop(CRGB16*) {}
+
+  void (*setColorsFn)(CRGB16* )= &setNoop;
+
+  CRGB16 getColor() { return buf[NUM_LEDS-1]; } // TODO return average
+
+  void _setColor(const CRGB16& color) {
+    for (int i = 0; i<NUM_LEDS; i++) {
+      buf[i] = color;
     }
+  }
+
+  void setFadeColors(CRGB16* buf) {
 #ifndef DEBUG_DAWN
     uint32_t t = millis();
 #else
     uint32_t t = millis()*60;
 #endif
-    if (t <= startTime) {
-      return CRGB16(0,0,0);
+    if (t <= fadeTime) {
+      setColor(CRGB16(0,0,0));
+      return;
     }
-    t -= startTime;
+    t -= fadeTime;
     DEBUG_LEDS_PRINT("t %u", t);
     while (segmentIndex < segments_len && endDuration[segmentIndex] <= t) {
       segmentIndex++;
     };
     DEBUG_LEDS_PRINT(", [%d]", segmentIndex);
     if (segmentIndex >= segments_len) {
+      setColor(segments[segments_len-1].color);
       stop(); // all done
-      return segments[segments_len-1].color;
+      return;
     }
     uint32_t start = (segmentIndex == 0 ? 0 : endDuration[segmentIndex -1]);
     DEBUG_LEDS_PRINT(", range [%d..%d]", start, endDuration[segmentIndex]);
@@ -111,7 +122,22 @@ static const ColorAtTime segments[] = {
                       color.r, color.g, color.b,
                       segments[segmentIndex].color.r, segments[segmentIndex].color.g, segments[segmentIndex].color.b,
                       f*1000/0x10000, f);
-    return nblend16(color, CRGB16(segments[segmentIndex].color), f);
+    _setColor(nblend16(color, CRGB16(segments[segmentIndex].color), f));
+    return;
+  }
+
+  CRGB16 interpolateStartColor;
+  CRGB16 interpolateEndColor;
+  bool interpolateStart = true;
+  void setInterpolateColors(CRGB16 *buf) {
+      if (interpolateStart) {
+        interpolateStart = false;
+        _setColor(interpolateStartColor);
+        return;
+      }
+      interpolateStart = true;
+      _setColor(interpolateEndColor);
+      return;
   }
 
   void updateOneComponentAndError(uint16_t& component, int16_t& error) {
@@ -151,46 +177,56 @@ static const ColorAtTime segments[] = {
 
   Error16 error(0,0,0);
 
-  void setColors(const CRGB16* leds16) {
-    CRGB32 avg(0,0,0);
+  void show() {
     for (int i = 0; i<NUM_LEDS; i++) {
-      CRGB16 c(leds16[i]);
+      CRGB16 c(buf[i]);
       DEBUG_LEDS_PRINT("start error: %+4d, %+4d, %+4d ", error.r, error.g, error.b);
       updateComponentAndError(c, error);
       CRGB c8 = c.CRGB16to8();
       leds[i] = c8;
       DEBUG_LEDS_PRINT(", led[%2d] %02x%02x%02x", i, leds[i].r, leds[i].g, leds[i].b);
       CRGB16 c16(c8);
-      avg.r += c16.r;
-      avg.g += c16.g;
-      avg.b += c16.b;
       error.r += c.r-c16.r;
       error.g += c.g-c16.g;
       error.b += c.b-c16.b;
       DEBUG_LEDS_PRINT(", end error: %+4d, %+4d, %+4d", error.r, error.g, error.b);
       DEBUG_LEDS_PRINT("\n");
     }
-    lastSetColor = CRGB16(
-                          (avg.r+NUM_LEDS/2)/NUM_LEDS,
-                          (avg.g+NUM_LEDS/2)/NUM_LEDS,
-                          (avg.b+NUM_LEDS/2)/NUM_LEDS);
     FastLED.show();
     FastLED.delay(0);
   }
 
-  void setColor(const CRGB16& color) {
-    CRGB16 leds16[NUM_LEDS];
-    for (int i = 0; i<NUM_LEDS; i++) {
-      leds16[i] = color;
+  // void show() {
+  //   for (int i = 0; i<NUM_LEDS; i++) {
+  //     leds[i] = buf[i].CRGB16to8();
+  //   }
+  //   FastLED.show();
+  //   FastLED.delay(0);
+  // }
+
+  void setColors(const CRGB16* leds16) {
+    for (int i = 0; i < NUM_LEDS; i++) {
+      buf[i] = leds16[i];
     }
-    setColors(leds16);
+    setColorsFn = &setNoop;
+  }
+
+  void setColor(const CRGB16& color) {
+    _setColor(color);
+    setColorsFn = &setNoop;
+  }
+
+  void interpolate(const CRGB16& start, const CRGB16& end) {
+    stop();
+    interpolateStartColor = start;
+    interpolateEndColor = end;
+    setColorsFn = &setInterpolateColors;
   }
 
   void loop() {
-    if (startTime == 0) return; // not running
-    CRGB16 color = getColor();
+    setColorsFn(buf);
     DEBUG_LEDS_PRINT(", color %04x%04x%04x\n", color.r, color.g, color.b);
-    setColor(color);
+    show();
     DEBUG_LEDS_PRINT("\n");
     frames++;
     if (millis()>=fpsEndTime) {
@@ -201,19 +237,20 @@ static const ColorAtTime segments[] = {
   }
 
   void start(int duration) {
+    DEBUG_PRINT("@%d start(%d): \n", millis(), duration);
     setEndDurations(duration);
     segmentIndex = 0;
 #ifndef DEBUG_DAWN
-    startTime = millis();
+    fadeTime = millis();
 #else
-    startTime = millis()*60;
+    fadeTime = millis()*60;
 #endif
-    DEBUG_PRINT("start: startTime: %d\n", startTime);
+    setColorsFn = &setFadeColors;
   }
 
   void stop() {
-  startTime = 0;
-  DEBUG_PRINT("stop: startTime: %d\n", startTime);
+    setColorsFn = &setNoop;
+    DEBUG_PRINT("stop: fadeTime: %d\n", fadeTime);
   }
 
   void clear() {
