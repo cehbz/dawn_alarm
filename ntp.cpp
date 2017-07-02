@@ -82,7 +82,7 @@ time_t getTime() {
 }
 
 void gotNTPResponse() {
-  Serial.printf("@%lu: Receive NTP Response\n", millis());
+  Serial.printf("@%lu: Receive NTP Response\n", millis()); Serial.flush();
   ntpPacketSentMillis = 0;
   blink(3);
   Udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
@@ -142,7 +142,7 @@ void setup()
     lookupTimeServerByName(NTPServerName);
     Udp.begin(localPort);
     syncIntervalMillis = 1000*SECS_PER_HOUR;
-    Serial.println("Initial NTP Sync");
+    Serial.printf("@%d: Initial NTP Sync\n", millis());
     getNTPTime();
     // wait for first sync
     while (curTimeLastSetMillis == 0 && millis()-ntpSyncStartMillis < 10*1000) { // try this server for 10 seconds before trying a different one
@@ -157,16 +157,16 @@ time_t prevDisplay = 0; // when the digital clock was displayed
 
 void loop()
 {
-  if (ntpPacketSentMillis == 0) {
-    if  (millis() - curTimeLastSetMillis >= syncIntervalMillis) {
-      Serial.println("NTP sync update");
-      getNTPTime();
+  if (ntpPacketSentMillis == 0) { // no outstanding packet
+    if  (millis() - curTimeLastSetMillis < syncIntervalMillis) { // too soon after the last one
       return;
     }
+    Serial.printf("@%d: NTP sync update\n", millis());
+    getNTPTime();
     return;
   }
   if (millis() - ntpPacketSentMillis >= 1500) {
-    Serial.println("NTP packet timed out");
+    Serial.printf("@%d: NTP packet timed out", millis());
     getNTPTime();
     return;
   }

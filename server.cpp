@@ -1,8 +1,11 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <ArduinoJson.h>
-#include "server.h"
 #include "leds.h"
+#include "server.h"
+#include "singleColor.h"
+#include "singleFramer.h"
+#include "interpolate.h"
 
 namespace server {
   WiFiServer server(80);
@@ -105,6 +108,7 @@ namespace server {
     sendCommon("400 Bad Request");
   }
 
+  static singleColor::Monochromer monochromer(CRGB16(0,0,0));
   void doPostColor(String path) {
     const size_t bufferSize = JSON_OBJECT_SIZE(3) + 30;
     DynamicJsonBuffer jsonBuffer(bufferSize);
@@ -122,10 +126,13 @@ namespace server {
     CRGB16 c(r, g, b);
 
     Serial.printf("@%lu: color %u [%04x], %u [%04x], %u [%04x]\n", millis(), c.r, c.r, c.g, c.g, c.b, c.b);
-    leds::setColor(c);
+    monochromer = singleColor::Monochromer(c);
+    leds::setAnimator(monochromer);
     send200();
   }
 
+  static CRGB16 leds[leds::NUM_LEDS];
+  static SingleFramer singleFramer(leds);
   void doPostColors(String path) {
     const size_t bufferSize = JSON_ARRAY_SIZE(leds::NUM_LEDS) + leds::NUM_LEDS*JSON_OBJECT_SIZE(3) + 30*leds::NUM_LEDS;
     DynamicJsonBuffer jsonBuffer(bufferSize);
@@ -137,17 +144,17 @@ namespace server {
       return;
     }
 
-    CRGB16 leds[leds::NUM_LEDS];
     for (int i = 0; i < leds::NUM_LEDS; i++) {
       JsonObject& r = root[i];
       leds[i] = CRGB16(r["r"], r["g"], r["b"]);
       Serial.printf("@%lu: leds[%2d] %u [%04x], %u [%04x], %u [%04x]\n", millis(), i, leds[i].r, leds[i].r, leds[i].g, leds[i].g, leds[i].b, leds[i].b);
     }
 
-    leds::setColors(leds);
+    leds::setAnimator(singleFramer);
     send200();
   }
 
+  static interpolate::Interpolater interpolater(CRGB16(0,0,0),CRGB16(0,0,0));
   void doPostInterpolate(String path) {
     const size_t bufferSize = JSON_OBJECT_SIZE(2) + 2*JSON_OBJECT_SIZE(3) + 70;
     DynamicJsonBuffer jsonBuffer(bufferSize);
@@ -164,7 +171,8 @@ namespace server {
 
     Serial.printf("@%lu: start color %u [%04x], %u [%04x], %u [%04x]\n", millis(), start.r, start.r, start.g, start.g, start.b, start.b);
     Serial.printf("@%lu: end color %u [%04x], %u [%04x], %u [%04x]\n", millis(), end.r, end.r, end.g, end.g, end.b, end.b);
-    leds::interpolate(start, end);
+    interpolater = interpolate::Interpolater(start, end);
+    leds::setAnimator(interpolater);
     send200();
   }
 

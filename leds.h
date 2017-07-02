@@ -3,27 +3,23 @@
 
 #include "crgb16.h"
 
-// #define DEBUG_LEDS
-#undef DEBUG_LEDS
-
-#ifdef DEBUG_LEDS
-#define DEBUG_LEDS_PRINT(...) Serial.printf(__VA_ARGS__)
-#else
-#define DEBUG_LEDS_PRINT(...)
-#endif
-
 namespace leds {
   static const int NUM_LEDS = 30;
+
+  class Animator {
+  public:
+    virtual void render(CRGB16* leds) = 0;
+  };
+
   CRGB16 getColor();
-  void interpolate(const CRGB16& start, const CRGB16& end);
   void setColor(const CRGB16& color);
   void setColors(const CRGB16* leds);
+  void setAnimator(Animator& animator);
 
   void setup();
   void loop();
   void start(int duration);
   void stop();
-  void clear();
 }
 
 #endif
