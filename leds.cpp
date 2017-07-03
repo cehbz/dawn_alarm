@@ -16,7 +16,7 @@ namespace leds {
   extern const uint16_t gamma16[256];
   static const int DATA_PIN = 1; // D1, GPIO5
   CRGB leds[NUM_LEDS];
-  CRGB16 frame[NUM_LEDS];
+  CRGB frame[NUM_LEDS];
 
   class LedsOff : public Animator {
   public:
@@ -27,7 +27,7 @@ namespace leds {
 
   CRGB getColor() {
     // TODO return average
-    return frame[NUM_LEDS-1].CRGB16to8();
+    return frame[NUM_LEDS-1];
   }
 
   void setColors(const CRGB* b) {
@@ -100,14 +100,15 @@ namespace leds {
 
   void show() {
     for (int i = 0; i<NUM_LEDS; i++) {
-      // CRGB16 c(gammaCorrect(frame[i]));
-      CRGB16 c(frame[i]);
-      DEBUG_LEDS_PRINT("start error: %+4d, %+4d, %+4d ", error.r, error.g, error.b);
-      c = error.correct(c);
+      CRGB16 c(gammaCorrect(frame[i]));
+      DEBUG_LEDS_PRINT("c %04x,%04x,%04x", c.r, c.g, c.b);
+      // CRGB16 c(frame[i]);
+      // DEBUG_LEDS_PRINT("start error: %+4d, %+4d, %+4d ", error.r, error.g, error.b);
+      // c = error.correct(c);
       leds[i] = c.CRGB16to8();
       DEBUG_LEDS_PRINT(", led[%2d] %02x%02x%02x", i, leds[i].r, leds[i].g, leds[i].b);
-      error.update(c, leds[i]);
-      DEBUG_LEDS_PRINT(", end error: %+4d, %+4d, %+4d", error.r, error.g, error.b);
+      // error.update(c, leds[i]);
+      // DEBUG_LEDS_PRINT(", end error: %+4d, %+4d, %+4d", error.r, error.g, error.b);
       DEBUG_LEDS_PRINT("\n");
     }
     FastLED.show();

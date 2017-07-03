@@ -13,12 +13,12 @@ static const fract16 f16(const uint16_t num, const uint16_t den) {
 
 // CRGB16(0x1000, 0x0400, 0x0080)
 static const fade::ColorAtTime segments[] = {
-  fade::ColorAtTime(f16(8,48), CRGB(1, 2, 4)),
-  fade::ColorAtTime(f16(24,48), CRGB(4, 4, 13)),
-  fade::ColorAtTime(f16(32,48), CRGB(21, 2, 11)),
-  fade::ColorAtTime(f16(40,48), CRGB(40, 0, 5)),
-  fade::ColorAtTime(f16(44,48), CRGB(128, 73, 20)),
-  fade::ColorAtTime(f16(48,48), CRGB(Candle)),
+  fade::ColorAtTime(f16(8,48), CRGB(28, 41, 56)),
+  fade::ColorAtTime(f16(24,48), CRGB(56, 56, 87)),
+  fade::ColorAtTime(f16(32,48), CRGB(104, 41, 82)),
+  fade::ColorAtTime(f16(40,48), CRGB(131, 0, 61)),
+  fade::ColorAtTime(f16(44,48), CRGB(199, 163, 102)),
+  fade::ColorAtTime(f16(48,48), CRGB(255, 209, 132)),
 };
 static const int num_segs = sizeof(segments)/sizeof(segments[0]);
 static fade::Fader fader(segments, num_segs, 1*SECS_PER_HOUR*1000, -1);
