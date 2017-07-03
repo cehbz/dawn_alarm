@@ -17,6 +17,7 @@ namespace leds {
   static const int DATA_PIN = 1; // D1, GPIO5
   CRGB leds[NUM_LEDS];
   CRGB frame[NUM_LEDS];
+  bool frameUpdated = false;
 
   class LedsOff : public Animator {
   public:
@@ -34,12 +35,14 @@ namespace leds {
     for (int i = 0; i<NUM_LEDS; i++) {
       frame[i] = b[i];
     }
+    frameUpdated = true;
   }
 
   void setColor(const CRGB& color) {
     for (int i = 0; i<NUM_LEDS; i++) {
       frame[i] = color;
     }
+    frameUpdated = true;
   }
 
   class Error16 {
@@ -100,6 +103,9 @@ namespace leds {
   };
 
   void show() {
+    if (!frameUpdated) {
+      return;
+    }
     for (int i = 0; i<NUM_LEDS; i++) {
       CRGB16 c(gammaCorrect(frame[i]));
       DEBUG_LEDS_PRINT("c %04x,%04x,%04x", c.r, c.g, c.b);
@@ -115,7 +121,7 @@ namespace leds {
       DEBUG_LEDS_PRINT("\n");
     }
     FastLED.show();
-    FastLED.delay(0);
+    frameUpdated = false;
   }
 
   // void show() {
@@ -143,6 +149,7 @@ namespace leds {
   void loop() {
     animator->render();
     show();
+    FastLED.delay(0);
     frames++;
     if (millis()>=fpsEndTime) {
       DEBUG_PRINT("@%lu, %d fps\n", millis(), frames);
