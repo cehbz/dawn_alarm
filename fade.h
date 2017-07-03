@@ -14,9 +14,9 @@ namespace fade {
   class ColorAtTime {
   public:
     fract16 pos;
-    CRGB16 color;
+    CRGB color;
 
-    ColorAtTime(fract16 f, CRGB16 c) : pos{f}, color{c} {}
+    ColorAtTime(fract16 f, CRGB c) : pos{f}, color{c} {}
   };
 
   class Fader : public leds::Animator {

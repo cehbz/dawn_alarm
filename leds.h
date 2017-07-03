@@ -1,5 +1,6 @@
 #pragma once
 
+#include <FastLED.h>
 #include "crgb16.h"
 
 namespace leds {
@@ -10,9 +11,10 @@ namespace leds {
     virtual void render() = 0;
   };
 
-  CRGB16 getColor();
-  void setColor(const CRGB16& color);
-  void setColors(const CRGB16* leds);
+  CRGB getColor();
+  void setColor(const CRGB& color);
+  void setColor16(const CRGB16& color);
+  void setColors(const CRGB* leds);
   void setAnimator(Animator& animator);
 
   void setup();

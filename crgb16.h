@@ -1,6 +1,6 @@
 #pragma once
 
-#include <FastLED.h>
+// #include <FastLED.h>
 
 // Representation of a 16 bit RGB pixel (Red, Green, Blue)
 struct CRGB16 {

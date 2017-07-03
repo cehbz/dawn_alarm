@@ -2,6 +2,8 @@
 #include "fade.h"
 #include "leds.h"
 
+#include "crgb16.h"
+
 namespace fade {
 
   int segmentIndex = 0;
@@ -47,7 +49,7 @@ namespace fade {
     CRGB16 color  = (segmentIndex == 0 ? CRGB16(0,0,0) : segments[segmentIndex-1].color);
     if (segmentIndex >= num_segs) {
       DEBUG_FADE_PRINT(" %04x,%04x,%04x\n", color.r, color.g, color.b);
-      leds::setColor(color);
+      leds::setColor16(color);
       return;
     }
     uint32_t start = (segmentIndex == 0 ? 0 : uint64_t(segments[segmentIndex -1].pos)*duration/65536);
@@ -59,7 +61,7 @@ namespace fade {
                       f*1000/0x10000, f);
     CRGB16 c = nblend16(color, CRGB16(segments[segmentIndex].color), f);
     DEBUG_FADE_PRINT(", %04x,%04x,%04x\n", c.r, c.g, c.b);
-    leds::setColor(c);
+    leds::setColor16(c);
     return;
   }
 };

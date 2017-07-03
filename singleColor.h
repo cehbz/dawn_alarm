@@ -6,9 +6,9 @@ namespace singleColor {
   class Monochromer : public leds::Animator {
   private:
     // const prevents copy construction and assignment.
-    CRGB16 color;
+    CRGB color;
   public:
-    Monochromer(const CRGB16& c) : color{c} {};
+    Monochromer(const CRGB& c) : color{c} {};
     void render();
   };
 };

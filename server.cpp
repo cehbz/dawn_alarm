@@ -81,13 +81,13 @@ namespace server {
     client.println();
     client.println("<!DOCTYPE HTML>");
     client.println("<html>");
-    CRGB16 color = leds::getColor();
+    CRGB color = leds::getColor();
     client.printf("Current color is %u %u %u", color.r, color.g, color.b);
     client.println("</html>");
   }
 
   void getColor() {
-    CRGB16 color = leds::getColor();
+    CRGB color = leds::getColor();
     const size_t bufferSize = JSON_OBJECT_SIZE(3) + 30;
     DynamicJsonBuffer jsonBuffer(bufferSize);
     JsonObject& root = jsonBuffer.createObject();
@@ -108,7 +108,7 @@ namespace server {
     sendCommon("400 Bad Request");
   }
 
-  static singleColor::Monochromer monochromer(CRGB16(0,0,0));
+  static singleColor::Monochromer monochromer(CRGB(0,0,0));
   void doPostColor(String path) {
     const size_t bufferSize = JSON_OBJECT_SIZE(3) + 30;
     DynamicJsonBuffer jsonBuffer(bufferSize);
@@ -120,18 +120,14 @@ namespace server {
       return;
     }
 
-    uint16_t r = root["r"];
-    uint16_t g = root["g"];
-    uint16_t b = root["b"];
-    CRGB16 c(r, g, b);
-
-    Serial.printf("@%lu: color %u [%04x], %u [%04x], %u [%04x]\n", millis(), c.r, c.r, c.g, c.g, c.b, c.b);
+    const CRGB c(root["r"], root["g"], root["b"]);
+    Serial.printf("@%lu: color %u [%02x], %u [%02x], %u [%02x]\n", millis(), c.r, c.r, c.g, c.g, c.b, c.b);
     monochromer = singleColor::Monochromer(c);
     leds::setAnimator(monochromer);
     send200();
   }
 
-  static CRGB16 leds[leds::NUM_LEDS];
+  static CRGB leds[leds::NUM_LEDS];
   static SingleFramer singleFramer(leds);
   void doPostColors(String path) {
     const size_t bufferSize = JSON_ARRAY_SIZE(leds::NUM_LEDS) + leds::NUM_LEDS*JSON_OBJECT_SIZE(3) + 30*leds::NUM_LEDS;
@@ -145,16 +141,17 @@ namespace server {
     }
 
     for (int i = 0; i < leds::NUM_LEDS; i++) {
-      JsonObject& r = root[i];
-      leds[i] = CRGB16(r["r"], r["g"], r["b"]);
-      Serial.printf("@%lu: leds[%2d] %u [%04x], %u [%04x], %u [%04x]\n", millis(), i, leds[i].r, leds[i].r, leds[i].g, leds[i].g, leds[i].b, leds[i].b);
+      const JsonObject& r = root[i];
+      const CRGB c(r["r"], r["g"], r["b"]);
+      leds[i] = c;
+      Serial.printf("@%lu: leds[%2d] %u [%02x], %u [%02x], %u [%02x]\n", millis(), i, leds[i].r, leds[i].r, leds[i].g, leds[i].g, leds[i].b, leds[i].b);
     }
 
     leds::setAnimator(singleFramer);
     send200();
   }
 
-  static interpolate::Interpolater interpolater(CRGB16(0,0,0),CRGB16(0,0,0));
+  static interpolate::Interpolater interpolater(CRGB(0,0,0),CRGB(0,0,0));
   void doPostInterpolate(String path) {
     const size_t bufferSize = JSON_OBJECT_SIZE(2) + 2*JSON_OBJECT_SIZE(3) + 70;
     DynamicJsonBuffer jsonBuffer(bufferSize);
@@ -166,11 +163,11 @@ namespace server {
       return;
     }
 
-    CRGB16 start(root["start"]["r"], root["start"]["g"], root["start"]["b"]);
-    CRGB16 end(root["end"]["r"], root["end"]["g"], root["end"]["b"]);
+    CRGB start(root["start"]["r"], root["start"]["g"], root["start"]["b"]);
+    CRGB end(root["end"]["r"], root["end"]["g"], root["end"]["b"]);
 
-    Serial.printf("@%lu: start color %u [%04x], %u [%04x], %u [%04x]\n", millis(), start.r, start.r, start.g, start.g, start.b, start.b);
-    Serial.printf("@%lu: end color %u [%04x], %u [%04x], %u [%04x]\n", millis(), end.r, end.r, end.g, end.g, end.b, end.b);
+    Serial.printf("@%lu: start color %u [%02x], %u [%02x], %u [%02x]\n", millis(), start.r, start.r, start.g, start.g, start.b, start.b);
+    Serial.printf("@%lu: end color %u [%02x], %u [%02x], %u [%02x]\n", millis(), end.r, end.r, end.g, end.g, end.b, end.b);
     interpolater = interpolate::Interpolater(start, end);
     leds::setAnimator(interpolater);
     send200();

@@ -5,11 +5,11 @@
 namespace interpolate {
   class Interpolater : public leds::Animator {
   private:
-    CRGB16 start;
-    CRGB16 end;
+    CRGB start;
+    CRGB end;
     bool useStart;
   public:
-    Interpolater(const CRGB16& s, const CRGB16& e) : start{s}, end{e}, useStart{true} {};
+    Interpolater(const CRGB& s, const CRGB& e) : start{s}, end{e}, useStart{true} {};
     void render();
   };
 };

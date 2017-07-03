@@ -4,8 +4,8 @@
 
   class SingleFramer : public leds::Animator {
   private:
-    const CRGB16* leds;
+    const CRGB* leds;
   public:
-    SingleFramer(const CRGB16* l) : leds{l} {};
+    SingleFramer(const CRGB* l) : leds{l} {};
     void render();
   };
