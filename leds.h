@@ -13,7 +13,6 @@ namespace leds {
 
   CRGB getColor();
   void setColor(const CRGB& color);
-  void setColor16(const CRGB16& color);
   void setColors(const CRGB* leds);
   void setAnimator(Animator& animator);
 

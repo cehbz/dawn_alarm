@@ -2,7 +2,7 @@
 
 #include "leds.h"
 
-// #define DEBUG_FADE
+#define DEBUG_FADE
 
 #ifdef DEBUG_FADE
 #define DEBUG_FADE_PRINT(...) Serial.printf(__VA_ARGS__)

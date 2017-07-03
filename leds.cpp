@@ -42,12 +42,6 @@ namespace leds {
     }
   }
 
-  void setColor16(const CRGB16& color) {
-    for (int i = 0; i<NUM_LEDS; i++) {
-      frame[i] = color;
-    }
-  }
-
   class Error16 {
   public: // so that you can print it, should be private
     int16_t r;
