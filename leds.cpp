@@ -49,8 +49,8 @@ namespace leds {
     int16_t b;
 
   public:
-    // default values are UNINITIALIZED (not allowed)
-    // inline Error16() __attribute__((always_inline)) {}
+    // default values are zero
+    inline Error16() __attribute__((always_inline)) : r(0), g(0), b(0) {}
 
     // allow construction from signed 16 bit R, G, B
     inline Error16( int16_t ir, int16_t ig, int16_t ib)  __attribute__((always_inline)) : r(ir), g(ig), b(ib) {}
@@ -89,7 +89,8 @@ namespace leds {
     }
   };
 
-  Error16 error(0,0,0);
+  Error16 errors[NUM_LEDS];
+  // Error16 error(0,0,0);
 
   CRGB16 gammaCorrect(CRGB& c) {
     return CRGB16(
@@ -103,12 +104,14 @@ namespace leds {
       CRGB16 c(gammaCorrect(frame[i]));
       DEBUG_LEDS_PRINT("c %04x,%04x,%04x", c.r, c.g, c.b);
       // CRGB16 c(frame[i]);
-      // DEBUG_LEDS_PRINT("start error: %+4d, %+4d, %+4d ", error.r, error.g, error.b);
-      // c = error.correct(c);
+      Error16 error = errors[i];
+      DEBUG_LEDS_PRINT("start error: %+4d, %+4d, %+4d ", error.r, error.g, error.b);
+      c = error.correct(c);
       leds[i] = c.CRGB16to8();
       DEBUG_LEDS_PRINT(", led[%2d] %02x%02x%02x", i, leds[i].r, leds[i].g, leds[i].b);
-      // error.update(c, leds[i]);
-      // DEBUG_LEDS_PRINT(", end error: %+4d, %+4d, %+4d", error.r, error.g, error.b);
+      error.update(c, leds[i]);
+      DEBUG_LEDS_PRINT(", end error: %+4d, %+4d, %+4d", error.r, error.g, error.b);
+      errors[i] = error;
       DEBUG_LEDS_PRINT("\n");
     }
     FastLED.show();
