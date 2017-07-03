@@ -1,5 +1,4 @@
-#ifndef CRGB32_H
-#define CRGB32_H
+#pragma once
 
 #include <FastLED.h>
 
@@ -87,5 +86,3 @@ struct CRGB32 {
                 );
   }
 };
-
-#endif

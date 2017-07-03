@@ -1,5 +1,4 @@
-#ifndef LEDS_H
-#define LEDS_H
+#pragma once
 
 #include "crgb16.h"
 
@@ -21,5 +20,3 @@ namespace leds {
   void start(int duration);
   void stop();
 }
-
-#endif

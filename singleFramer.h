@@ -1,5 +1,4 @@
-#ifndef SINGLEFRAMER_H
-#define SINGLEFRAMER_H
+#pragma once
 
 #include "leds.h"
 
@@ -10,5 +9,3 @@
     SingleFramer(const CRGB16* l) : leds{l} {};
     void render(CRGB16* buf);
   };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef INTERPOLATE_H
-#define INTERPOLATE_H
+#pragma once
 
 #include "leds.h"
 
@@ -14,5 +13,3 @@ namespace interpolate {
     void render(CRGB16* leds);
   };
 };
-
-#endif

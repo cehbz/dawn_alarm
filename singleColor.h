@@ -1,5 +1,4 @@
-#ifndef SINGLECOLOR_H
-#define SINGLECOLOR_H
+#pragma once
 
 #include "leds.h"
 

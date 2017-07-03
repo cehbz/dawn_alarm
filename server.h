@@ -1,9 +1,6 @@
-#ifndef SERVER_H
-#define SERVER_H
+#pragma once
 
 namespace server {
   void setup();
   void loop();
 }
-
-#endif

@@ -1,9 +1,6 @@
-#ifndef NTP_H
-#define NTP_H
+#pragma once
 
 namespace ntp {
   void setup();
   void loop();
 }
-
-#endif

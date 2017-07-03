@@ -1,5 +1,4 @@
-#ifndef FADE_H
-#define FADE_H
+#pragma once
 
 #include "leds.h"
 
@@ -36,5 +35,3 @@ namespace fade {
     void render(CRGB16* buf);
   };
 };
-
-#endif
