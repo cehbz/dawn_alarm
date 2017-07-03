@@ -32,6 +32,6 @@ namespace fade {
         duration{dur},
         fadeStartMillis{start}
     {};
-    void render(CRGB16* buf);
+    void render();
   };
 };

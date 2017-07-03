@@ -7,5 +7,5 @@
     const CRGB16* leds;
   public:
     SingleFramer(const CRGB16* l) : leds{l} {};
-    void render(CRGB16* buf);
+    void render();
   };

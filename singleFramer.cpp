@@ -1,6 +1,6 @@
 #include "singleFramer.h"
 #include "leds.h"
 
-void SingleFramer::render(CRGB16*) {
+void SingleFramer::render() {
   leds::setColors(leds);
 };

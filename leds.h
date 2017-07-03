@@ -7,7 +7,7 @@ namespace leds {
 
   class Animator {
   public:
-    virtual void render(CRGB16* leds) = 0;
+    virtual void render() = 0;
   };
 
   CRGB16 getColor();

@@ -19,7 +19,7 @@ namespace leds {
 
   class LedsOff : public Animator {
   public:
-    void render(CRGB16*) { setColor(CRGB16(0,0,0));};
+    void render() { setColor(CRGB16(0,0,0));};
   };
   static LedsOff ledsOff;
   Animator* animator = &ledsOff;
@@ -126,7 +126,7 @@ namespace leds {
   }
 
   void loop() {
-    animator->render(buf);
+    animator->render();
     show();
     frames++;
     if (millis()>=fpsEndTime) {

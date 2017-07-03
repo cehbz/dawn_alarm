@@ -9,8 +9,6 @@ namespace singleColor {
     CRGB16 color;
   public:
     Monochromer(const CRGB16& c) : color{c} {};
-    void render(CRGB16*);
+    void render();
   };
 };
-
-#endif

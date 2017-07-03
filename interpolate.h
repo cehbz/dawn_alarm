@@ -10,6 +10,6 @@ namespace interpolate {
     bool useStart;
   public:
     Interpolater(const CRGB16& s, const CRGB16& e) : start{s}, end{e}, useStart{true} {};
-    void render(CRGB16* leds);
+    void render();
   };
 };

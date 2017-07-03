@@ -3,7 +3,7 @@
 
 namespace interpolate {
 
-  void Interpolater::render(CRGB16* leds) {
+  void Interpolater::render() {
     if (useStart) {
       useStart = false;
       leds::setColor(start);

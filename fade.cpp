@@ -32,7 +32,7 @@ namespace fade {
     return existing;
   }
 
-  void Fader::render(CRGB16* buf) {
+  void Fader::render() {
     uint32_t t = millis() - fadeStartMillis;
 #ifdef DEBUG_FADE
     t *= 60;
