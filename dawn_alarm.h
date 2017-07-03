@@ -1,7 +1,6 @@
 #pragma once
 
 // #define DEBUG_DAWN
-#undef DEBUG_DAWN
 
 #ifdef DEBUG_DAWN
 #define DEBUG_PRINT(...) Serial.printf(__VA_ARGS__)

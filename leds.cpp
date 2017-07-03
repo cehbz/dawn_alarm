@@ -136,7 +136,7 @@ namespace leds {
   void setup() {
     fpsEndTime = millis()+1000;
     frames = 0;
-    FastLED.setMaxPowerInVoltsAndMilliamps(5, 4000);
+    // FastLED.setMaxPowerInVoltsAndMilliamps(5, 4000);
     FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
   }
 
