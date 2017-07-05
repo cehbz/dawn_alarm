@@ -10,7 +10,7 @@ namespace fade {
 
   void Fader::render() {
     uint32_t t = millis() - fadeStartMillis;
-#ifdef DEBUG_FADE
+#if defined(DEBUG_FADE) || defined(DEBUG_ALARMER)
     t *= 60;
 #endif
     DEBUG_FADE_PRINT("t %u", t);
