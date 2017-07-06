@@ -7,8 +7,9 @@
     "build-dev": "webpack --env.dev",
     "build": "webpack --env.prod",
     "start": "http-server",
-    "test": "npm run lint && karma start --single-run --log-level debug",
-    "prebuild": "npm test",
+    "test": "karma start --single-run",
+    "prebuild": "yarn run test",
+    "pretest": "yarn run lint",
     "dev": "webpack-dev-server --hot --inline --env.dev --port 8082",
     "lint": "eslint *.{js,jsx} {spec,app}/**/*.{js,jsx}"
   },
