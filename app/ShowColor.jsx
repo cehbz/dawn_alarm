@@ -45,7 +45,7 @@ export default class ShowColor extends Component {
 
   render() {
     return (
-      <div>
+      <div className="show-color">
         <button className="ledframe" onClick={this.handleClick}>
           <div
             className="ledemitter"

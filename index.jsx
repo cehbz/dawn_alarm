@@ -1,65 +1,47 @@
 /* eslint-env browser */
 
-import * as d3color from 'd3-color';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import ShowColor from './app/ShowColor';
-import { getColor, interpolate, setColor, setColors } from './app/Utils';
+import { HashRouter as Router, Route, Link, Switch } from 'react-router-dom';
+import Monochrome from './app/Monochrome';
+import Gradient from './app/Gradient';
+import Fader from './app/Fader';
+import Alarm from './app/Alarm';
+import Options from './app/Options';
 import './assets/styles.scss';
 
-let startColor = d3color.color('#f19');
-let endColor = d3color.color('#000');
-
-const handleStartChange = color => {
-  startColor = color.rgb();
-  setColor(startColor);
-};
-
-const handleEndChange = color => {
-  endColor = color.rgb();
-  if (
-    endColor.r !== startColor.r ||
-    endColor.g !== startColor.g ||
-    endColor.b !== startColor.b
-  ) {
-    interpolate(startColor, endColor);
-    return;
-  }
-  const colors = [];
-  for (let i = 0; i < 30; i += 1) {
-    colors[i] = endColor;
-  }
-  setColors(colors);
-};
-
-const render = () => {
-  ReactDOM.render(
+ReactDOM.render(
+  <Router>
     <div className="outerContainer">
       <header>
         <div className="fixed-width">
-          <img
-            alt="logo"
-            src="/assets/images/logo.png"
-            id="logo"
-            width="52px"
-          />
+          <div className="menu">
+            <Link className="menu-item" to="/">
+              <img
+                alt="logo"
+                src="/assets/images/logo.png"
+                id="logo"
+                width="52px"
+              />
+            </Link>
+            <Link className="menu-item" to="/monochrome">Monochrome</Link>
+            <Link className="menu-item" to="/gradient">Gradient</Link>
+            <Link className="menu-item" to="/fader">Fader</Link>
+            <Link className="menu-item" to="/alarm">Alarm</Link>
+            <Link className="menu-item" to="/options">Options</Link>
+          </div>
         </div>
       </header>
       <div className="main">
-        <ShowColor color={startColor} handleChange={handleStartChange} />
-        <ShowColor color={endColor} handleChange={handleEndChange} />
+        <Switch>
+          <Route path="/monochrome" component={Monochrome} />
+          <Route path="/gradient" component={Gradient} />
+          <Route path="/fader" component={Fader} />
+          <Route path="/alarm" component={Alarm} />
+          <Route path="/options" component={Options} />
+        </Switch>
       </div>
-    </div>,
-    document.getElementById('container')
-  );
-};
-
-render();
-
-getColor().then(c => {
-  if (typeof c !== 'undefined') {
-    startColor = c;
-    endColor = startColor;
-    render();
-  }
-});
+    </div>
+  </Router>,
+  document.getElementById('container')
+);

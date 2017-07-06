@@ -1,28 +1,55 @@
-.ledemitter {
-  width: 36px;
-  height: 36px;
-  border-radius: 100%;
-  background: #f77;
+$fa-font-path: "../node_modules/font-awesome/fonts";
+@import "../node_modules/font-awesome/scss/font-awesome";
+
+@import "menu";
+@import "header";
+
+/* $primary-color: #3c0fff; */
+/* $primary-dark: #265b2; */
+/* $primary-light: #5129ff; */
+/* $complementary-color: #b29f00; */
+/* $complementary-light: #ffe40f; */
+
+body {
+    margin: 0;
+    font-family: 'Open Sans';
+    font-weight: 300;
 }
 
-.ledframe {
-  padding: 5px;
-  background: #eee;
-  border-radius: 8px;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, .1);
-  display: inline-block;
-  cursor: pointer;
+.fixed-width {
+    margin: 0 auto;
+    padding: 0 20px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-popover {
-    position: absolute;
-    zIndex: 2;
-}
+.show-color {
+    .ledemitter {
+        width: 36px;
+        height: 36px;
+        border-radius: 100%;
+        background: #f77;
+    }
 
-cover {
-    position: fixed;
-    top: 0px;
-    right: 0px;
-    bottom: 0px;
-    left: 0px;
+    .ledframe {
+        padding: 5px;
+        background: #eee;
+        border-radius: 8px;
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, .1);
+        display: inline-block;
+        cursor: pointer;
+    }
+
+    popover {
+        position: absolute;
+        zIndex: 2;
+    }
+
+    cover {
+        position: fixed;
+        top: 0px;
+        right: 0px;
+        bottom: 0px;
+        left: 0px;
+    }
 }
