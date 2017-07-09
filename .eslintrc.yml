@@ -5,12 +5,16 @@ extends:
 parser: babel-eslint
 plugins:
   - prettier
+  - jasmine
+  - react
+  - jsx-a11y
 parserOptions:
   ecmaVersion: 2016
   sourceType: module
   ecmaFeatures:
     jsx: true
-  env:
-    es6: true,
-    browser: true,
-    node: true
+env:
+  es6: true
+  browser: true
+  node: true
+  jasmine: true

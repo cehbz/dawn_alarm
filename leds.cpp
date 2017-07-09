@@ -15,7 +15,7 @@
 namespace leds {
   extern const uint16_t gamma16[256];
   static const int DATA_PIN = 1; // D1, GPIO5
-  CRGB leds[NUM_LEDS];
+  CRGB leds[NUM_LEDS]; // TODO should be private to a fastled specific class of some sort
   CRGB frame[NUM_LEDS];
   bool frameUpdated = false;
 
@@ -26,9 +26,23 @@ namespace leds {
   static LedsOff ledsOff;
   Animator* animator = &ledsOff;
 
-  CRGB getColor() {
-    // TODO return average
-    return frame[NUM_LEDS-1];
+  const CRGB getColor() {
+    uint16_t r = 0;
+    uint16_t g = 0;
+    uint16_t b = 0;
+    for (int i = 0; i < NUM_LEDS; i++) {
+      r += frame[i].r;
+      g += frame[i].g;
+      b += frame[i].b;
+    }
+    r = (r+NUM_LEDS/2)/NUM_LEDS;
+    g = (g+NUM_LEDS/2)/NUM_LEDS;
+    b = (b+NUM_LEDS/2)/NUM_LEDS;
+    return CRGB(r, g, b);
+  }
+
+  const CRGB* getColors() {
+    return frame;
   }
 
   void setColors(const CRGB* b) {

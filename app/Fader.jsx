@@ -5,8 +5,8 @@ import { ShowColor } from './ShowColor';
 
 export default class Fader extends Component {
   state = {
-    startColor: d3color.color('#f19'),
-    endColor: d3color.color('#000'),
+    startColor: d3color.rgb('#f19'),
+    endColor: d3color.rgb('#000'),
   };
 
   handleStartChange = color => {

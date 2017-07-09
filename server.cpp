@@ -87,13 +87,31 @@ namespace server {
   }
 
   void getColor() {
-    CRGB color = leds::getColor();
+    const CRGB color = leds::getColor();
     const size_t bufferSize = JSON_OBJECT_SIZE(3) + 30;
     DynamicJsonBuffer jsonBuffer(bufferSize);
     JsonObject& root = jsonBuffer.createObject();
     root["r"]=color.r;
     root["g"]=color.g;
     root["b"]=color.b;
+    send200();
+    client.println("Content-Type: application/json");
+    client.println();
+    root.printTo(client);
+  }
+
+  void getColors() {
+    const CRGB* colors = leds::getColors();
+    const size_t bufferSize = JSON_ARRAY_SIZE(leds::NUM_LEDS) + leds::NUM_LEDS*JSON_OBJECT_SIZE(3) + 30*leds::NUM_LEDS;
+    DynamicJsonBuffer jsonBuffer(bufferSize);
+
+    JsonArray& root = jsonBuffer.createArray();
+    for (int i = 0; i < leds::NUM_LEDS; i++) {
+      JsonObject& led = root.createNestedObject();
+      led["r"]=colors[i].r;
+      led["g"]=colors[i].g;
+      led["b"]=colors[i].b;
+    }
     send200();
     client.println("Content-Type: application/json");
     client.println();
@@ -198,6 +216,10 @@ namespace server {
   void doGet(String path) {
     if (path == "/color") {
       getColor();
+      return;
+    }
+    if (path == "/colors") {
+      getColors();
       return;
     }
     if (path == "/") {

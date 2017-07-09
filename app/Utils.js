@@ -1,10 +1,19 @@
 import { scaleLinear } from 'd3-scale';
+import { rgb } from 'd3-color';
 import axios from 'axios';
 
 const BASE_URL = 'http://dawn.local';
 
 function getColor() {
   const url = `${BASE_URL}/color`;
+  return axios
+    .get(url, {})
+    .then(response => response.data)
+    .catch(() => undefined);
+}
+
+function getColors() {
+  const url = `${BASE_URL}/colors`;
   return axios
     .get(url, {})
     .then(response => response.data)
@@ -38,22 +47,19 @@ function setColor(color) {
   });
 }
 
-const colorToRGB16 = c => ({ r: c.r * 256, g: c.g * 256, b: c.b * 256 });
-const RGB16 = c => ({
-  r: Math.round(c.r),
-  g: Math.round(c.g),
-  b: Math.round(c.b),
-});
-
 function setGradient(startColor, endColor) {
+  console.log('setGradient startColor', startColor, 'endColor', endColor);
   const colorScale = scaleLinear()
     .domain([0, 29])
-    .range([colorToRGB16(startColor), colorToRGB16(endColor)]);
+    .range([startColor, endColor]);
   const colors = [];
   for (let i = 0; i < 30; i += 1) {
-    colors[i] = RGB16(colorScale(i));
+    const c = rgb(colorScale(i));
+    console.log(i, c);
+    colors[i] = { r: c.r, g: c.g, b: c.b };
   }
   setColors(colors);
+  console.log('setGradient colors', colors);
 }
 
 function interpolate(startColor, endColor) {
@@ -72,4 +78,12 @@ function interpolate(startColor, endColor) {
   });
 }
 
-export { BASE_URL, getColor, setColor, setColors, setGradient, interpolate };
+export {
+  BASE_URL,
+  getColor,
+  getColors,
+  setColor,
+  setColors,
+  setGradient,
+  interpolate,
+};

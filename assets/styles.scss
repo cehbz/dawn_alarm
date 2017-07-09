@@ -16,6 +16,13 @@ body {
     font-weight: 300;
 }
 
+button {
+    background-color: rgba(0,0,0,0);
+    border: none;
+    cursor: pointer;
+    outline: none;
+}
+
 .fixed-width {
     margin: 0 auto;
     padding: 0 20px;
@@ -23,33 +30,31 @@ body {
     box-sizing: border-box;
 }
 
-.show-color {
-    .ledemitter {
-        width: 36px;
-        height: 36px;
-        border-radius: 100%;
-        background: #f77;
-    }
+.led {
+    padding: 5px;
+    background: #eee;
+    border-radius: 8px;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, .1);
+    display: inline-block;
+    cursor: pointer;
+}
 
-    .ledframe {
-        padding: 5px;
-        background: #eee;
-        border-radius: 8px;
-        box-shadow: 0 0 0 2px rgba(0, 0, 0, .1);
-        display: inline-block;
-        cursor: pointer;
-    }
+.led-emitter {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f77;
+}
 
-    popover {
-        position: absolute;
-        zIndex: 2;
-    }
+.popover {
+    position: relative;
+}
 
-    cover {
-        position: fixed;
-        top: 0px;
-        right: 0px;
-        bottom: 0px;
-        left: 0px;
-    }
+.cover {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0);
 }

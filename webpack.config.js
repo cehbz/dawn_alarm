@@ -38,6 +38,7 @@ module.exports = env => {
       ],
     },
     plugins: removeEmpty([
+      ifNotProd(new webpack.NamedModulesPlugin()), // TODO remove this when it becomes the default
       ifProd(
         new webpack.LoaderOptionsPlugin({
           minimize: true,

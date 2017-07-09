@@ -11,7 +11,8 @@ namespace leds {
     virtual void render() = 0;
   };
 
-  CRGB getColor();
+  const CRGB getColor();
+  const CRGB* getColors();
   void setColor(const CRGB& color);
   void setColors(const CRGB* leds);
   void setAnimator(Animator& animator);
