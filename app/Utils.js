@@ -55,11 +55,9 @@ function setGradient(startColor, endColor) {
   const colors = [];
   for (let i = 0; i < 30; i += 1) {
     const c = rgb(colorScale(i));
-    console.log(i, c);
     colors[i] = { r: c.r, g: c.g, b: c.b };
   }
   setColors(colors);
-  console.log('setGradient colors', colors);
 }
 
 function interpolate(startColor, endColor) {

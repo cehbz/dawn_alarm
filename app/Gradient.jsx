@@ -76,35 +76,44 @@ export default class Gradient extends Component {
     setGradient(this.state.startColor, this.state.endColor);
   };
 
-  render = () =>
-    <div>
-      <button className="start-color" onClick={this.handleStartClick}>
-        <LED color={this.state.startColor} />
-      </button>
-      {this.state.displayStartColorPicker
-        ? <div className="popover">
-            <button className="cover" onClick={this.handleStartClose} />
-            <div className="color-picker">
-              <SketchPicker
-                color={this.state.startColor}
-                onChangeComplete={this.handleStartChange}
-              />
+  render = () => {
+    const gradientStyle = {
+      background: `linear-gradient(to right,
+                                  ${this.state.startColor},
+                                  ${this.state.endColor})`,
+    };
+    return (
+      <div className="gradient">
+        <button className="start-color" onClick={this.handleStartClick}>
+          <LED color={this.state.startColor} />
+        </button>
+        {this.state.displayStartColorPicker
+          ? <div className="popover">
+              <button className="cover" onClick={this.handleStartClose} />
+              <div className="color-picker">
+                <SketchPicker
+                  color={this.state.startColor}
+                  onChangeComplete={this.handleStartChange}
+                />
+              </div>
             </div>
-          </div>
-        : null}
-      <button className="end-color" onClick={this.handleEndClick}>
-        <LED color={this.state.endColor} />
-      </button>
-      {this.state.displayEndColorPicker
-        ? <div className="popover">
-            <button className="cover" onClick={this.handleEndClose} />
-            <div className="color-picker">
-              <SketchPicker
-                color={this.state.endColor}
-                onChangeComplete={this.handleEndChange}
-              />
+          : null}
+        <div className="gradient-box" style={gradientStyle} />
+        <button className="end-color" onClick={this.handleEndClick}>
+          <LED color={this.state.endColor} />
+        </button>
+        {this.state.displayEndColorPicker
+          ? <div className="popover">
+              <button className="cover" onClick={this.handleEndClose} />
+              <div className="color-picker">
+                <SketchPicker
+                  color={this.state.endColor}
+                  onChangeComplete={this.handleEndChange}
+                />
+              </div>
             </div>
-          </div>
-        : null}
-    </div>;
+          : null}
+      </div>
+    );
+  };
 }
