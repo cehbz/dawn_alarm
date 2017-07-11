@@ -8,12 +8,19 @@ namespace fade {
 
   int segmentIndex = 0;
 
+  uint32_t Fader::posToMillis(int segIndex) {
+    // if (segIndex >= num_segs) { segIndex = num_segs-1; }
+    // if (segIndex < 0) {segIndex = 0; }
+    return uint64_t(segments[segIndex].pos)*duration >> 16;
+  }
+
   void Fader::render() {
     uint32_t t = millis() - fadeStartMillis;
 #if defined(DEBUG_FADE) || defined(DEBUG_ALARMER)
     t *= 60;
 #endif
     DEBUG_FADE_PRINT("t %u", t);
+    if (t >= posToMillis(num_segs-1)) {}
     uint32_t end = uint64_t(segments[segmentIndex].pos)*duration >> 16;
     while (segmentIndex < num_segs && end <= t) {
       segmentIndex++;

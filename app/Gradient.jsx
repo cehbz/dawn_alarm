@@ -40,6 +40,16 @@ export default class Gradient extends Component {
     });
   };
 
+  componentDidUpdate = (_, prevState) => {
+    if (
+      prevState.startColor === this.state.startColor &&
+      prevState.endColor === this.state.endColor
+    ) {
+      return;
+    }
+    setGradient(this.state.startColor, this.state.endColor);
+  };
+
   handleStartClick = () => {
     this.setState({
       displayStartColorPicker: !this.state.displayStartColorPicker,
@@ -73,7 +83,6 @@ export default class Gradient extends Component {
     }
     const c = color.rgb;
     this.setState({ endColor: d3color.rgb(c.r, c.g, c.b) });
-    setGradient(this.state.startColor, this.state.endColor);
   };
 
   render = () => {

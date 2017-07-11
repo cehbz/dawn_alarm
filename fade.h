@@ -25,6 +25,7 @@ namespace fade {
     uint8_t num_segs;
     uint32_t duration;
     uint32_t fadeStartMillis;
+    uint32_t posToMillis(int segIndex); // return the stop time of this segment
   public:
     Fader(const ColorAtTime* segs, const uint8_t num, const uint32_t dur, const uint32_t start = millis())
       : segments{segs},

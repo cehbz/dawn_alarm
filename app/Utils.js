@@ -48,7 +48,6 @@ function setColor(color) {
 }
 
 function setGradient(startColor, endColor) {
-  console.log('setGradient startColor', startColor, 'endColor', endColor);
   const colorScale = scaleLinear()
     .domain([0, 29])
     .range([startColor, endColor]);
