@@ -1,0 +1,12 @@
+.led {
+    background: #eee;
+    border-radius: 15%;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, .1);
+    display: inline-block;
+    cursor: pointer;
+}
+
+.led-emitter {
+    border-radius: 50%;
+    background: #f77;
+}

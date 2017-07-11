@@ -1,0 +1,16 @@
+.gradient {
+    .gradient-box {
+        width: 300px;
+        height: 10px;
+        padding: 1px;
+        background: linear-gradient(to right, rgb(0,0,0), rgba(0,0,0,0));
+        display: inline-block;
+    }
+    .led-emitter {
+        width: 10px;
+        height: 10px;
+    }
+    .led {
+        padding: 1px;
+    }
+}

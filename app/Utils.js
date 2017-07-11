@@ -35,12 +35,37 @@ function setColors(colors) {
     });
 }
 
+function getAlarms() {
+  const url = `${BASE_URL}/alarms`;
+  return axios
+    .get(url, {})
+    .then(response => response.data)
+    .catch(() => undefined);
+}
+
 function setColor(color) {
   const url = `${BASE_URL}/color`;
   return axios.post(url, color).then(response => response.data).catch(error => {
     /* eslint-disable no-console */
     console.log(
       `setColor: error in axios.post('${url}', ${JSON.stringify(color)})`
+    );
+    console.log(error);
+    /* eslint-enable no-console */
+  });
+}
+
+function setAlarms(alarms) {
+  const url = `${BASE_URL}/alarms`;
+  const param = {};
+  Object.keys(alarms).forEach(key => {
+    param[key] = alarms[key].format('HH:mm');
+  });
+  return axios.post(url, param).then(response => response.data).catch(error => {
+    /* eslint-disable no-console */
+    console.log(
+      `setColor: error in axios.post('${url}, alarms) alarms ='`,
+      alarms
     );
     console.log(error);
     /* eslint-enable no-console */
@@ -79,6 +104,8 @@ export {
   BASE_URL,
   getColor,
   getColors,
+  getAlarms,
+  setAlarms,
   setColor,
   setColors,
   setGradient,

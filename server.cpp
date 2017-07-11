@@ -1,11 +1,14 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <ArduinoJson.h>
-#include "leds.h"
+#include <TimeAlarms.h>
+
 #include "server.h"
+#include "leds.h"
 #include "singleColor.h"
 #include "singleFramer.h"
 #include "interpolate.h"
+#include "alarmer.h"
 
 namespace server {
   WiFiServer server(80);
@@ -75,7 +78,19 @@ namespace server {
     sendCommon("200 OK");
   }
 
-  void getRoot() {
+  void send404() {
+    sendCommon("404 Not Found");
+  }
+
+  void send400() {
+    sendCommon("400 Bad Request");
+  }
+
+  void send500() {
+    sendCommon("500 Internal Server Error");
+  }
+
+  void doGetRoot() {
     send200();
     client.println("Content-Type: text/html");
     client.println();
@@ -86,7 +101,7 @@ namespace server {
     client.println("</html>");
   }
 
-  void getColor() {
+  void doGetColor() {
     const CRGB color = leds::getColor();
     const size_t bufferSize = JSON_OBJECT_SIZE(3) + 30;
     DynamicJsonBuffer jsonBuffer(bufferSize);
@@ -100,7 +115,7 @@ namespace server {
     root.printTo(client);
   }
 
-  void getColors() {
+  void doGetColors() {
     const CRGB* colors = leds::getColors();
     const size_t bufferSize = JSON_ARRAY_SIZE(leds::NUM_LEDS) + leds::NUM_LEDS*JSON_OBJECT_SIZE(3) + 30*leds::NUM_LEDS;
     DynamicJsonBuffer jsonBuffer(bufferSize);
@@ -118,16 +133,61 @@ namespace server {
     root.printTo(client);
   }
 
-  void send404() {
-    sendCommon("404 Not Found");
-  }
+  const char* const dayNames[] = {
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday"
+  };
 
-  void send400() {
-    sendCommon("400 Bad Request");
+  void doGetAlarms() {
+    const size_t bufferSize = JSON_OBJECT_SIZE(7) + 110;
+    DynamicJsonBuffer jsonBuffer(bufferSize);
+
+    JsonObject& root = jsonBuffer.createObject();
+    bool alarms[dowSaturday];
+    typedef char AlarmTimeStr[6];
+    AlarmTimeStr alarmTimes[7];
+    for ( int d = dowSunday; d <= dowSaturday; d++) {
+      timeDayOfWeek_t dow = timeDayOfWeek_t(d);
+      alarms[dow] = false;
+    }
+    for (int i = 0; i < dtNBR_ALARMS; i++) {
+      Serial.printf("%d: %d\n", i, Alarm.readType(i));
+      if (Alarm.readType(i) != dtWeeklyAlarm) continue;
+      auto a = Alarm.read(i);
+      Serial.printf("%d: %d %02d:%02d", a, (dayOfWeek(a)+2)%7+1, numberOfHours(a), numberOfMinutes(a)); Serial.flush();
+      auto dow = timeDayOfWeek_t((dayOfWeek(a)+2)%7+1);
+      Serial.printf(" %s\n", dayNames[dow-1]); Serial.flush();
+      if (alarms[dow]) {
+        Serial.printf("duplicate alarm for %s\n", dayNames[dow-1]);
+        send500();
+        return;
+      }
+      alarms[dow] = true;
+      sprintf(alarmTimes[dow-1], "%02d:%02d", numberOfHours(a), numberOfMinutes(a));
+      root[dayNames[dow-1]] = alarmTimes[dow-1];
+    }
+    for ( int d = dowSunday; d <= dowSaturday; d++) {
+      timeDayOfWeek_t dow = timeDayOfWeek_t(d);
+      if (!alarms[dow-1]) {
+        Serial.printf("missing alarm for %s\n", dayNames[dow-1]);
+        send500();
+        return;
+      }
+      Serial.printf("\"%s\": \"%s\"\n", dayNames[dow-1], root[dayNames[dow-1]].as<const char *>());
+    }
+    send200();
+    client.println("Content-Type: application/json");
+    client.println();
+    root.printTo(client);
   }
 
   static singleColor::Monochromer monochromer(CRGB(0,0,0));
-  void doPostColor(String path) {
+  void doPostColor() {
     const size_t bufferSize = JSON_OBJECT_SIZE(3) + 30;
     DynamicJsonBuffer jsonBuffer(bufferSize);
 
@@ -147,7 +207,7 @@ namespace server {
 
   static CRGB leds[leds::NUM_LEDS];
   static SingleFramer singleFramer(leds);
-  void doPostColors(String path) {
+  void doPostColors() {
     const size_t bufferSize = JSON_ARRAY_SIZE(leds::NUM_LEDS) + leds::NUM_LEDS*JSON_OBJECT_SIZE(3) + 30*leds::NUM_LEDS;
     DynamicJsonBuffer jsonBuffer(bufferSize);
 
@@ -170,7 +230,7 @@ namespace server {
   }
 
   static interpolate::Interpolater interpolater(CRGB(0,0,0),CRGB(0,0,0));
-  void doPostInterpolate(String path) {
+  void doPostInterpolate() {
     const size_t bufferSize = JSON_OBJECT_SIZE(2) + 2*JSON_OBJECT_SIZE(3) + 70;
     DynamicJsonBuffer jsonBuffer(bufferSize);
 
@@ -191,23 +251,76 @@ namespace server {
     send200();
   }
 
+  int stoi(const char* s) {
+    // returns a two digit integer pointed to by s
+    // returns -1 if error
+    if (s[0] < '0' || s[0] > '9' || s[1] < '0' || s[1] > '9') return -1;
+    return (s[0]-'0')*10+s[1]-'0';
+  }
+
+  void doPostAlarms() {
+    const size_t bufferSize = JSON_OBJECT_SIZE(7) + 110;
+    DynamicJsonBuffer jsonBuffer(bufferSize);
+
+    JsonObject& root = jsonBuffer.parseObject(client);
+    if (!root.success()) {
+      Serial.printf("parse failed\n");
+      send400();
+      return;
+    }
+    for ( int d = dowSunday; d <= dowSaturday; d++) {
+      timeDayOfWeek_t dow = timeDayOfWeek_t(d);
+      const char *c = root[dayNames[dow-1]];
+      if (c == NULL) {
+        Serial.printf("missing alarm for %s\n", dayNames[dow-1]);
+        send400();
+        return;
+      }
+      Serial.printf("%s: %s\n", dayNames[dow-1], c);
+      if (strlen(c) != 5 || c[2] != ':') {
+        Serial.printf("bad alarm time for %s: %s. strlen = %d, c[2] = %c\n", dayNames[dow-1], c, strlen(c), c[2]);
+        send400();
+        return;
+      }
+      int h = stoi(c);
+      int m = stoi(&c[3]);
+      if (h < 0 || h > 23 || m < 0 || m > 59) {
+        Serial.printf("bad alarm time for %s: %s. h %d, m %d\n", dayNames[dow-1], c, h, m);
+        send400();
+        return;
+      }
+    }
+    for ( int d = dowSunday; d <= dowSaturday; d++) {
+      timeDayOfWeek_t dow = timeDayOfWeek_t(d);
+      const char *c = root[dayNames[dow-1]];
+      int h = stoi(c);
+      int m = stoi(&c[3]);
+      alarmer::SetAlarm(dow, h, m);
+    }
+    send200();
+  }
+
   void doPost(String path) {
     if (path == "/color") {
-      doPostColor(path);
+      doPostColor();
       return;
     }
     if (path == "/colors") {
-      doPostColors(path);
+      doPostColors();
       return;
     }
     if (path == "/interpolate") {
-      doPostInterpolate(path);
+      doPostInterpolate();
+      return;
+    }
+    if (path == "/alarms") {
+      doPostAlarms();
       return;
     }
     send404();
   }
 
-  void doOptions(String path) {
+  void doOptions(String) {
     send200();
     client.println("Access-Control-Allow-Methods: POST, GET, OPTIONS");
     client.println("Access-Control-Allow-Headers: content-type");
@@ -215,15 +328,19 @@ namespace server {
 
   void doGet(String path) {
     if (path == "/color") {
-      getColor();
+      doGetColor();
       return;
     }
     if (path == "/colors") {
-      getColors();
+      doGetColors();
+      return;
+    }
+    if (path == "/alarms") {
+      doGetAlarms();
       return;
     }
     if (path == "/") {
-      getRoot();
+      doGetRoot();
       return;
     }
     send404();

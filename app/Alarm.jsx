@@ -1,47 +1,81 @@
 import React, { Component } from 'react';
-import * as d3color from 'd3-color';
-import { interpolate, setColor, setColors } from './Utils';
-import { ShowColor } from './ShowColor';
+import moment from 'moment';
+import 'rc-time-picker/assets/index.css';
+import TimePicker from 'rc-time-picker';
 
-export default class Alarm extends Component {
+import { getAlarms, setAlarms } from './Utils';
+
+export default class AlarmClock extends Component {
+  static format = 'h:mm a';
+  static defaultAlarmTime = moment().hour(6).minute(0);
+
+  static stateChanged(oldState, newState) {
+    if (Object.keys(oldState).length !== Object.keys(newState).length) {
+      return true;
+    }
+    return Object.keys(oldState).reduce(
+      (acc, key) => acc || oldState[key] !== newState[key],
+      false
+    );
+  }
+
   state = {
-    startColor: d3color.rgb('#f19'),
-    endColor: d3color.rgb('#000'),
+    sunday: AlarmClock.defaultAlarmTime,
+    monday: AlarmClock.defaultAlarmTime,
+    tuesday: AlarmClock.defaultAlarmTime,
+    wednesday: AlarmClock.defaultAlarmTime,
+    thursday: AlarmClock.defaultAlarmTime,
+    friday: AlarmClock.defaultAlarmTime,
+    saturday: AlarmClock.defaultAlarmTime,
   };
 
-  handleStartChange = color => {
-    this.state.startColor = color.rgb();
-    setColor(this.state.startColor);
+  componentWillMount = () => {
+    getAlarms().then(alarms => {
+      const s = {};
+      Object.keys(alarms).forEach(key => {
+        s[key] = moment(alarms[key], 'HH:mm');
+      });
+      this.setState(s);
+    });
   };
 
-  handleEndChange = color => {
-    this.state.endColor = color.rgb();
-    if (
-      this.state.endColor.r !== this.state.startColor.r ||
-      this.state.endColor.g !== this.state.startColor.g ||
-      this.state.endColor.b !== this.state.startColor.b
-    ) {
-      interpolate(this.state.startColor, this.state.endColor);
+  componentDidUpdate = (_, prevState) => {
+    if (!AlarmClock.stateChanged(prevState, this.state)) {
       return;
     }
-    const colors = [];
-    for (let i = 0; i < 30; i += 1) {
-      colors[i] = this.state.endColor;
+    setAlarms(this.state);
+  };
+
+  onChange = (day, time) => {
+    const s = {};
+    if (time === null) {
+      s[day] = '';
+    } else {
+      s[day] = moment(time);
     }
-    setColors(colors);
+    this.setState(s);
   };
 
   render() {
+    const dayAlarm = day =>
+      <div className="day" key={day}>
+        <div className="day-name">
+          {`${day.charAt(0).toUpperCase()}${day.slice(1)}`}
+        </div>
+        <TimePicker
+          showSecond={false}
+          defaultValue={AlarmClock.defaultAlarmTime}
+          value={this.state[day]}
+          className="alarm"
+          onChange={time => this.onChange(day, time)}
+          format={AlarmClock.format}
+          use12Hours
+        />
+      </div>;
+
     return (
-      <div>
-        <ShowColor
-          color={this.state.startColor}
-          handleChange={this.handleStartChange}
-        />
-        <ShowColor
-          color={this.state.endColor}
-          handleChange={this.handleEndChange}
-        />
+      <div className="alarms">
+        {Object.keys(this.state).map(dayAlarm)}
       </div>
     );
   }

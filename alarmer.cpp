@@ -1,5 +1,6 @@
-#include "alarmer.h"
 #include <TimeAlarms.h>
+
+#include "alarmer.h"
 #include "fade.h"
 
 namespace alarmer {
@@ -43,11 +44,29 @@ namespace alarmer {
     leds::setAnimator(fader);
   }
 
+  AlarmID_t dowAlarms[dowSaturday];
+  void SetAlarm(const timeDayOfWeek_t dow, const int h, const int m) {
+    Alarm.free(dowAlarms[dow]);
+    dowAlarms[dow] = Alarm.alarmRepeat(dow, h, m, 0, MorningAlarm);
+  }
+
   void setup() {
-#ifndef DEBUG_ALARMER
-    Alarm.alarmRepeat(6,0,0, MorningAlarm);
-#else
+    for ( int d = dowSunday; d <= dowSaturday; d++) {
+      timeDayOfWeek_t dow = timeDayOfWeek_t(d);
+      switch (dow) {
+      case dowSaturday:
+      case dowSunday:
+      case dowMonday:
+        dowAlarms[dow] = Alarm.alarmRepeat(dow, 7, 0, 0, MorningAlarm);
+        break;
+      default:
+        dowAlarms[dow] = Alarm.alarmRepeat(dow, 6, 0, 0, MorningAlarm);
+      }
+    }
+#ifdef DEBUG_ALARMER
     Alarm.alarmOnce(hour(now()), minute(now()), second(now())+1, MorningAlarm);
+#else
+    Alarm.alarmRepeat(6, 0, 0, MorningAlarm);
 #endif
   }
 

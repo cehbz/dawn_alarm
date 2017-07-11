@@ -1,5 +1,7 @@
 #pragma once
 
+#include <TimeAlarms.h>
+
 // #define DEBUG_ALARMER
 
 #ifdef DEBUG_ALARMER
@@ -9,6 +11,7 @@
 #endif
 
 namespace alarmer {
+  void SetAlarm(const timeDayOfWeek_t DOW, const int h, const int m);
   void setup();
   void loop();
 }
