@@ -159,7 +159,7 @@ namespace server {
       Serial.printf("%d: %d\n", i, Alarm.readType(i));
       if (Alarm.readType(i) != dtWeeklyAlarm) continue;
       auto a = Alarm.read(i);
-      Serial.printf("%d: %d %02d:%02d", a, (dayOfWeek(a)+2)%7+1, numberOfHours(a), numberOfMinutes(a)); Serial.flush();
+      Serial.printf("%2lu: %lu %02lu:%02lu", a, (dayOfWeek(a)+2)%7+1, numberOfHours(a), numberOfMinutes(a)); Serial.flush();
       auto dow = timeDayOfWeek_t((dayOfWeek(a)+2)%7+1);
       Serial.printf(" %s\n", dayNames[dow-1]); Serial.flush();
       if (alarms[dow]) {
@@ -168,7 +168,7 @@ namespace server {
         return;
       }
       alarms[dow] = true;
-      sprintf(alarmTimes[dow-1], "%02d:%02d", numberOfHours(a), numberOfMinutes(a));
+      sprintf(alarmTimes[dow-1], "%02lu:%02lu", numberOfHours(a), numberOfMinutes(a));
       root[dayNames[dow-1]] = alarmTimes[dow-1];
     }
     for ( int d = dowSunday; d <= dowSaturday; d++) {
