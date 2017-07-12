@@ -1,5 +1,6 @@
 $fa-font-path: "../node_modules/font-awesome/fonts";
 @import "../node_modules/font-awesome/scss/font-awesome";
+@import "../node_modules/rc-time-picker/assets/index.css";
 
 @import "color-picker";
 @import "gradient";
@@ -7,6 +8,7 @@ $fa-font-path: "../node_modules/font-awesome/fonts";
 @import "menu";
 @import "monochrome";
 @import "header";
+@import "text";
 
 /* $primary-color: #3c0fff; */
 /* $primary-dark: #265b2; */

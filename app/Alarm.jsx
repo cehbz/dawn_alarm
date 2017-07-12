@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import moment from 'moment';
-import 'rc-time-picker/assets/index.css';
 import TimePicker from 'rc-time-picker';
 
 import { getAlarms, setAlarms } from './Utils';
@@ -58,7 +57,7 @@ export default class AlarmClock extends Component {
 
   render() {
     const dayAlarm = day =>
-      <div className="day" key={day}>
+      <div className={`day ${day}`} key={day}>
         <div className="day-name">
           {`${day.charAt(0).toUpperCase()}${day.slice(1)}`}
         </div>
