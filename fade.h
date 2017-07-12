@@ -25,7 +25,6 @@ namespace fade {
     uint8_t num_segs;
     uint32_t duration;
     uint32_t fadeStartMillis;
-    uint32_t posToMillis(int segIndex); // return the stop time of this segment
   public:
     Fader(const ColorAtTime* segs, const uint8_t num, const uint32_t dur, const uint32_t start = millis())
       : segments{segs},
@@ -33,6 +32,20 @@ namespace fade {
         duration{dur},
         fadeStartMillis{start}
     {};
+
+    inline uint32_t posToMillis(int segIndex) __attribute__ ((always_inline)) {
+      return uint64_t(segments[segIndex].pos)*duration >> 16;
+    }
+
+    void print() {
+      Serial.printf(
+                    "Fader(%x, %d, %d, %d)",
+                    uint32_t(segments),
+                    num_segs,
+                    duration,
+                    fadeStartMillis);
+    }
+
     void render();
   };
 };

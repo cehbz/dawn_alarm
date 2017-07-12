@@ -1,5 +1,6 @@
 #include "dawn_alarm.h"
 #include "leds.h"
+#include "alarmer.h" // to get DEBUG_ALARMER_PRINT
 #include <FastLED.h>
 #include "crgb16.h"
 #include "crgb32.h"
@@ -22,6 +23,7 @@ namespace leds {
   class LedsOff : public Animator {
   public:
     void render() { setColor(CRGB(0,0,0));};
+    void print() { Serial.print("LedsOff()"); }
   };
   static LedsOff ledsOff;
   Animator* animator = &ledsOff;
@@ -148,6 +150,9 @@ namespace leds {
 
   void setAnimator(Animator& a) {
     animator = &a;
+    #ifdef DEBUG_ALARMER
+    Serial.printf("@%d Animator  = ", millis()); a.print(); Serial.println();
+    #endif
   }
 
   uint32_t fpsEndTime;

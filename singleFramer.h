@@ -8,4 +8,5 @@
   public:
     SingleFramer(const CRGB* l) : leds{l} {};
     void render();
+    void print() { Serial.printf("SingleFramer(*%x)", uint32_t(leds)); }
   };

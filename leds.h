@@ -9,6 +9,7 @@ namespace leds {
   class Animator {
   public:
     virtual void render() = 0;
+    virtual void print() = 0;
   };
 
   const CRGB getColor();
