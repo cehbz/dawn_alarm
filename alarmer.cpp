@@ -23,12 +23,12 @@ namespace alarmer {
     // fade::ColorAtTime(f16(48,48), CRGB(255, 209, 132)),
   };
   static const int num_segs = sizeof(segments)/sizeof(segments[0]);
-  static fade::Fader fader(segments, num_segs, 1*SECS_PER_HOUR*1000, -1);
+  static fade::Fader fader(segments, num_segs, 1*SECS_PER_HOUR*1000);
 
   void MorningAlarm() {
     Serial.println("MorningAlarm");
-    fader = fade::Fader(segments, num_segs, 1*SECS_PER_HOUR*1000, millis());
-    Serial.printf("@%d ", millis()); fader.print(); Serial.println();
+    fader.reset();
+    Serial.printf("@%lu ", millis()); fader.print(); Serial.println();
 #ifdef DEBUG_ALARMER
     for (int i = 0; i < num_segs; i++) {
       auto s = segments[i];
@@ -66,7 +66,6 @@ namespace alarmer {
     }
 #ifdef DEBUG_ALARMER
     Alarm.timerOnce(1, MorningAlarm);
-    Alarm.timerRepeat(70, MorningAlarm);
 #else
     Alarm.alarmRepeat(6, 0, 0, MorningAlarm);
 #endif
