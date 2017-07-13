@@ -14,7 +14,7 @@ namespace fade {
     reset();
 #else
     static auto a =  singleColor::Monochromer(endColor);
-    leds::setAnimator(a);
+    hwLeds::setAnimator(a);
 #endif
   }
 
@@ -42,6 +42,6 @@ namespace fade {
     CRGB c = segStartColor;
     c = nblend(c, segEndColor, f);
     DEBUG_FADE_PRINT(", #%02x%02x%02x\n", c.r, c.g, c.b);
-    leds::setColor(c);
+    hwLeds::setColor(c);
   }
 };

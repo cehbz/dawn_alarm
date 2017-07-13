@@ -42,7 +42,7 @@ namespace alarmer {
     }
     DEBUG_ALARMER_PRINT("duration %d\n", 1*SECS_PER_HOUR*1000);
 #endif
-    leds::setAnimator(fader);
+    hwLeds::setAnimator(fader);
   }
 
   AlarmID_t dowAlarms[dowSaturday];

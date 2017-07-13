@@ -19,7 +19,7 @@ namespace fade {
     ColorAtTime(fract16 f, CRGB c) : pos{f}, color{c} {}
   };
 
-  class Fader : public leds::Animator {
+  class Fader : public Animator {
   private:
     const ColorAtTime* segments;
     uint8_t num_segs;

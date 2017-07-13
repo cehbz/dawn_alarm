@@ -3,7 +3,7 @@
 #include "leds.h"
 
 namespace singleColor {
-  class Monochromer : public leds::Animator {
+  class Monochromer : public Animator {
   private:
     // const prevents copy construction and assignment.
     CRGB color;

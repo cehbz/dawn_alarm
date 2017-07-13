@@ -3,7 +3,7 @@
 #include "leds.h"
 
 namespace interpolate {
-  class Interpolater : public leds::Animator {
+  class Interpolater : public Animator {
   private:
     CRGB start;
     CRGB end;

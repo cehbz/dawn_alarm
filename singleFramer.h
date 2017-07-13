@@ -2,7 +2,7 @@
 
 #include "leds.h"
 
-  class SingleFramer : public leds::Animator {
+  class SingleFramer : public Animator {
   private:
     const CRGB* leds;
   public:

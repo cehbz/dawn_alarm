@@ -3,23 +3,21 @@
 #include <FastLED.h>
 #include "crgb16.h"
 
-namespace leds {
+class Animator {
+public:
+  virtual void render() = 0;
+  virtual void print() = 0;
+};
+
+class hwLeds {
+public:
   static const int NUM_LEDS = 30;
+  static const CRGB getColor();
+  static const CRGB* getColors();
+  static void setColor(const CRGB& color);
+  static void setColors(const CRGB* leds);
+  static void setAnimator(Animator& animator);
 
-  class Animator {
-  public:
-    virtual void render() = 0;
-    virtual void print() = 0;
-  };
-
-  const CRGB getColor();
-  const CRGB* getColors();
-  void setColor(const CRGB& color);
-  void setColors(const CRGB* leds);
-  void setAnimator(Animator& animator);
-
-  void setup();
-  void loop();
-  void start(int duration);
-  void stop();
-}
+  static void setup();
+  static void loop();
+};

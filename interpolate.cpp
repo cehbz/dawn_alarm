@@ -6,10 +6,10 @@ namespace interpolate {
   void Interpolater::render() {
     if (useStart) {
       useStart = false;
-      leds::setColor(start);
+      hwLeds::setColor(start);
       return;
     }
     useStart = true;
-    leds::setColor(end);
+    hwLeds::setColor(end);
   };
 };

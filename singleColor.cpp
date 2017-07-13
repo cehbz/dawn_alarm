@@ -2,5 +2,5 @@
 #include "leds.h"
 
 namespace singleColor {
-  void Monochromer::render() {leds::setColor(color);};
+  void Monochromer::render() {hwLeds::setColor(color);};
 };
