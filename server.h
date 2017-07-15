@@ -1,8 +1,9 @@
 #pragma once
+#include <ESP8266WiFi.h>
 
 class RequestHandler {
 public:
-  virtual void Handle(const char* path) = 0;
+  virtual void Handle(WiFiClient& client, const char* path) const = 0;
 };
 
 class HTTPServer {

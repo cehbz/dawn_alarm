@@ -52,6 +52,9 @@ namespace alarmer {
   }
 
   void setup() {
+#ifdef DEBUG_ALARMER
+    Alarm.timerOnce(1, MorningAlarm);
+#else
     for ( int d = dowSunday; d <= dowSaturday; d++) {
       timeDayOfWeek_t dow = timeDayOfWeek_t(d);
       switch (dow) {
@@ -64,10 +67,6 @@ namespace alarmer {
         dowAlarms[dow] = Alarm.alarmRepeat(dow, 6, 0, 0, MorningAlarm);
       }
     }
-#ifdef DEBUG_ALARMER
-    Alarm.timerOnce(1, MorningAlarm);
-#else
-    Alarm.alarmRepeat(6, 0, 0, MorningAlarm);
 #endif
   }
 
