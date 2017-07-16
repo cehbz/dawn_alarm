@@ -11,6 +11,16 @@
 #endif
 
 namespace alarmer {
+const char* const dayNames[] = {
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday"
+};
+
   void SetAlarm(const timeDayOfWeek_t DOW, const int h, const int m);
   void setup();
   void loop();
