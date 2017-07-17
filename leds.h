@@ -11,7 +11,9 @@ public:
 
 class hwLeds {
 public:
-  static const int NUM_LEDS = 30;
+  // static const int NUM_LEDS = 30; // WS2812B
+  // static const int NUM_LEDS = 60; // APA102
+  static const int NUM_LEDS = 3; // Adafruit Pixie
   static const CRGB getColor();
   static const CRGB* getColors();
   static void setColor(const CRGB& color);

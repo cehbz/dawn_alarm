@@ -1,6 +1,7 @@
 #include "dawn_alarm.h"
 #include "leds.h"
 #include "alarmer.h" // to get DEBUG_ALARMER_PRINT
+#include "Adafruit_Pixie.h"
 #include <FastLED.h>
 #include "crgb16.h"
 #include "crgb32.h"
@@ -14,9 +15,11 @@
 #endif
 
 extern const uint16_t gamma16[256];
-static const int DATA_PIN = 1; // D1, GPIO5
+static const int DATA_PIN = 7; // D7, GPIO13, RXD2, HMOSI
+static const int CLK_PIN = 5; // D5, GPIO14, HSCLK
 CRGB leds[hwLeds::NUM_LEDS]; // TODO should be private to a fastled specific class of some sort
 CRGB frame[hwLeds::NUM_LEDS];
+Adafruit_Pixie strip = Adafruit_Pixie(hwLeds::NUM_LEDS, &Serial1);
 bool frameUpdated = false;
 
 class LedsOff : public Animator {
@@ -111,10 +114,11 @@ Error16 errors[hwLeds::NUM_LEDS];
 // Error16 error(0,0,0);
 
 CRGB16 gammaCorrect(CRGB& c) {
-  return CRGB16(
-                gamma16[c.r],
-                gamma16[c.g],
-                gamma16[c.b]);
+  return CRGB16(c);
+  // return CRGB16(
+  //               gamma16[c.r],
+  //               gamma16[c.g],
+  //               gamma16[c.b]);
 };
 
 void show() {
@@ -135,7 +139,12 @@ void show() {
     errors[i] = error;
     DEBUG_LEDS_PRINT("\n");
   }
-  FastLED.show();
+  for (int i = 0; i < hwLeds::NUM_LEDS; i++) {
+    strip.setPixelColor(i, leds[i].r, leds[i].g, leds[i].b);
+  }
+  strip.show();
+  delay(10);
+  // FastLED.show();
   frameUpdated = false;
 }
 
@@ -160,14 +169,19 @@ uint32_t frames;
 void hwLeds::setup() {
   fpsEndTime = millis()+1000;
   frames = 0;
-  FastLED.setMaxPowerInVoltsAndMilliamps(5, 4000);
-  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, hwLeds::NUM_LEDS);
+  // pixieSerial.begin(115200); // Pixie REQUIRES this baud rate
+  Serial1.begin(115200);  // <- Alt. if using hardware serial port
+  strip.setBrightness(255);  // Adjust as necessary to avoid blinding
+  // FastLED.setMaxPowerInVoltsAndMilliamps(5, 4000); // external power brick
+  // FastLED.setMaxPowerInVoltsAndMilliamps(5, 2000); // usb power
+  // FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, hwLeds::NUM_LEDS);
+  // FastLED.addLeds<APA102, DATA_PIN, CLK_PIN, RGB>(leds, hwLeds::NUM_LEDS);
 }
 
 void hwLeds::loop() {
   animator->render();
   show();
-  FastLED.delay(0);
+  // FastLED.delay(0);
   frames++;
   if (millis()>=fpsEndTime) {
     DEBUG_PRINT("@%lu, %d fps\n", millis(), frames);
