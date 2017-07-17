@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import * as d3color from 'd3-color';
-import { interpolate, setColor, setColors } from './Utils';
+import { interpolate, setColor, setColors, NUM_LEDS } from './Utils';
 import { ShowColor } from './ShowColor';
 
 export default class Fader extends Component {
@@ -25,7 +25,7 @@ export default class Fader extends Component {
       return;
     }
     const colors = [];
-    for (let i = 0; i < 30; i += 1) {
+    for (let i = 0; i < NUM_LEDS; i += 1) {
       colors[i] = this.state.endColor;
     }
     setColors(colors);

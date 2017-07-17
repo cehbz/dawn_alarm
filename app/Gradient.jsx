@@ -1,10 +1,8 @@
 import React, { Component } from 'react';
 import { SketchPicker } from 'react-color';
 import * as d3color from 'd3-color';
-import { getColors, setGradient } from './Utils';
+import { getColors, setGradient, NUM_LEDS } from './Utils';
 import LED from './LED';
-
-const NUM_LEDS = 30;
 
 export default class Gradient extends Component {
   state = {

@@ -3,6 +3,7 @@ import { rgb } from 'd3-color';
 import axios from 'axios';
 
 const BASE_URL = 'http://dawn.local';
+const NUM_LEDS = 3; // TODO set this via a query
 
 function getColor() {
   const url = `${BASE_URL}/color`;
@@ -74,10 +75,10 @@ function setAlarms(alarms) {
 
 function setGradient(startColor, endColor) {
   const colorScale = scaleLinear()
-    .domain([0, 29])
+    .domain([0, NUM_LEDS - 1])
     .range([startColor, endColor]);
   const colors = [];
-  for (let i = 0; i < 30; i += 1) {
+  for (let i = 0; i < NUM_LEDS; i += 1) {
     const c = rgb(colorScale(i));
     colors[i] = { r: c.r, g: c.g, b: c.b };
   }
@@ -102,6 +103,7 @@ function interpolate(startColor, endColor) {
 
 export {
   BASE_URL,
+  NUM_LEDS,
   getColor,
   getColors,
   getAlarms,
