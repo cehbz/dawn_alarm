@@ -10,9 +10,9 @@ void GetColorsHandler::Handle(const char* path) {
   JsonArray& root = jsonBuffer.createArray();
   for (int i = 0; i < hwLeds::NUM_LEDS; i++) {
     JsonObject& led = root.createNestedObject();
-    led["r"]=colors[i].r;
-    led["g"]=colors[i].g;
-    led["b"]=colors[i].b;
+    led["r"]=colors[i].R;
+    led["g"]=colors[i].G;
+    led["b"]=colors[i].B;
   }
   client.sendJSON(root);
 };

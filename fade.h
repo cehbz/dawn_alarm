@@ -13,10 +13,10 @@
 namespace fade {
   class ColorAtTime {
   public:
-    fract16 pos;
+    float pos;
     CRGB color;
 
-    ColorAtTime(fract16 f, CRGB c) : pos{f}, color{c} {}
+    ColorAtTime(float f, CRGB c) : pos{f}, color{c} {}
   };
 
   class Fader : public Animator {
@@ -50,7 +50,7 @@ namespace fade {
     };
 
     inline uint32_t posToMillis(int segIndex) __attribute__ ((always_inline)) {
-      return uint64_t(segments[segIndex].pos)*duration >> 16;
+      return segments[segIndex].pos*duration;
     }
 
     void print() {
@@ -63,13 +63,14 @@ namespace fade {
                     segmentIndex,
                     segStartMillis,
                     segEndMillis,
-                    segStartColor.r, segStartColor.g, segStartColor.b,
-                    segEndColor.r, segEndColor.g, segEndColor.b);
+                    segStartColor.R, segStartColor.G, segStartColor.B,
+                    segEndColor.R, segEndColor.G, segEndColor.B);
     };
 
     void render();
     void reset() {
       fadeStartMillis = millis();
+      Serial.printf("@%lu fade.reset() fadeStartMillis = %lu\n", millis(), fadeStartMillis);
       setIndex(0);
     }
   };

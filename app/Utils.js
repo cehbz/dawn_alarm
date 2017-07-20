@@ -3,7 +3,7 @@ import { rgb } from 'd3-color';
 import axios from 'axios';
 
 const BASE_URL = 'http://dawn.local';
-const NUM_LEDS = 3; // TODO set this via a query
+const NUM_LEDS = 60; // TODO set this via a query
 
 function getColor() {
   const url = `${BASE_URL}/color`;

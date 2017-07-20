@@ -10,6 +10,6 @@ namespace singleColor {
   public:
     Monochromer(const CRGB& c) : color{c} {};
     void render();
-    void print() { Serial.printf("Monochromer(%02x%02x%02x)", color.r, color.g, color.b); }
+    void print() { Serial.printf("Monochromer(%02x%02x%02x)", color.R, color.G, color.B); }
   };
 };

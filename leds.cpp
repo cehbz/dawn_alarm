@@ -1,8 +1,7 @@
 #include "dawn_alarm.h"
 #include "leds.h"
 #include "alarmer.h" // to get DEBUG_ALARMER_PRINT
-#include "Adafruit_Pixie.h"
-#include <FastLED.h>
+#include <NeoPixelBus.h>
 #include "crgb16.h"
 #include "crgb32.h"
 
@@ -15,11 +14,18 @@
 #endif
 
 extern const uint16_t gamma16[256];
-static const int DATA_PIN = 7; // D7, GPIO13, RXD2, HMOSI
-static const int CLK_PIN = 5; // D5, GPIO14, HSCLK
-CRGB leds[hwLeds::NUM_LEDS]; // TODO should be private to a fastled specific class of some sort
-CRGB frame[hwLeds::NUM_LEDS];
+#ifdef fastled
+// static const int DATA_PIN = 7; // D7, GPIO13, RXD2, HMOSI
+// static const int CLK_PIN = 5; // D5, GPIO14, HSCLK
+#endif
+#ifdef pixie
 Adafruit_Pixie strip = Adafruit_Pixie(hwLeds::NUM_LEDS, &Serial1);
+#endif
+#ifdef neopixelbus
+NeoPixelBus<NeoGrbwFeature, Neo800KbpsMethod> strip(hwLeds::NUM_LEDS);
+#endif
+CRGB leds[hwLeds::NUM_LEDS]; // TODO should be private to a hw specific class of some sort
+CRGB frame[hwLeds::NUM_LEDS];
 bool frameUpdated = false;
 
 class LedsOff : public Animator {
@@ -35,9 +41,9 @@ const CRGB hwLeds::getColor() {
   uint16_t g = 0;
   uint16_t b = 0;
   for (int i = 0; i < hwLeds::NUM_LEDS; i++) {
-    r += frame[i].r;
-    g += frame[i].g;
-    b += frame[i].b;
+    r += frame[i].R;
+    g += frame[i].G;
+    b += frame[i].B;
   }
   r = (r+hwLeds::NUM_LEDS/2)/hwLeds::NUM_LEDS;
   g = (g+hwLeds::NUM_LEDS/2)/hwLeds::NUM_LEDS;
@@ -125,26 +131,33 @@ void show() {
   if (!frameUpdated) {
     return;
   }
+  DEBUG_LEDS_PRINT("@%lu leds show()\n", millis());
   for (int i = 0; i<hwLeds::NUM_LEDS; i++) {
     CRGB16 c(gammaCorrect(frame[i]));
     DEBUG_LEDS_PRINT("c %04x,%04x,%04x", c.r, c.g, c.b);
-    // CRGB16 c(frame[i]);
     Error16 error = errors[i];
-    DEBUG_LEDS_PRINT("start error: %+4d, %+4d, %+4d ", error.r, error.g, error.b);
+    DEBUG_LEDS_PRINT(", start error: %+4d, %+4d, %+4d ", error.r, error.g, error.b);
     c = error.correct(c);
     leds[i] = c.CRGB16to8();
-    DEBUG_LEDS_PRINT(", led[%2d] %02x%02x%02x", i, leds[i].r, leds[i].g, leds[i].b);
+    DEBUG_LEDS_PRINT(", led[%2d] %02x%02x%02x", i, leds[i].R, leds[i].G, leds[i].B);
     error.update(c, leds[i]);
     DEBUG_LEDS_PRINT(", end error: %+4d, %+4d, %+4d", error.r, error.g, error.b);
     errors[i] = error;
     DEBUG_LEDS_PRINT("\n");
   }
   for (int i = 0; i < hwLeds::NUM_LEDS; i++) {
-    strip.setPixelColor(i, leds[i].r, leds[i].g, leds[i].b);
+    strip.SetPixelColor(i, leds[i]);
   }
+#ifdef neopixelbus
+  DEBUG_LEDS_PRINT("strip.Show()\n");
+  strip.Show();
+#endif
+#ifdef pixie
   strip.show();
-  delay(10);
-  // FastLED.show();
+#endif
+#ifdef fastled
+  FastLED.show();
+#endif
   frameUpdated = false;
 }
 
@@ -169,19 +182,29 @@ uint32_t frames;
 void hwLeds::setup() {
   fpsEndTime = millis()+1000;
   frames = 0;
-  // pixieSerial.begin(115200); // Pixie REQUIRES this baud rate
+#ifdef neopixelbus
+  strip.Begin();
+  strip.ClearTo(RgbwColor(0,0,0,0));
+  strip.Show();
+#endif
+#ifdef pixie
   Serial1.begin(115200);  // <- Alt. if using hardware serial port
   strip.setBrightness(255);  // Adjust as necessary to avoid blinding
-  // FastLED.setMaxPowerInVoltsAndMilliamps(5, 4000); // external power brick
+#endif
+#ifdef fastled
+  FastLED.setMaxPowerInVoltsAndMilliamps(5, 4000); // external power brick
   // FastLED.setMaxPowerInVoltsAndMilliamps(5, 2000); // usb power
-  // FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, hwLeds::NUM_LEDS);
+  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, hwLeds::NUM_LEDS);
   // FastLED.addLeds<APA102, DATA_PIN, CLK_PIN, RGB>(leds, hwLeds::NUM_LEDS);
+#endif
 }
 
 void hwLeds::loop() {
   animator->render();
   show();
-  // FastLED.delay(0);
+#ifdef fastled
+  FastLED.delay(0);
+#endif
   frames++;
   if (millis()>=fpsEndTime) {
     DEBUG_PRINT("@%lu, %d fps\n", millis(), frames);

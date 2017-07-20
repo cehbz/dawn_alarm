@@ -19,7 +19,9 @@ void PostColorsHandler::Handle(const char* path) {
     const JsonObject& r = root[i];
     const CRGB c(r["r"], r["g"], r["b"]);
     leds[i] = c;
-    Serial.printf("@%lu: leds[%2d] %u [%02x], %u [%02x], %u [%02x]\n", millis(), i, leds[i].r, leds[i].r, leds[i].g, leds[i].g, leds[i].b, leds[i].b);
+    Serial.printf(
+                  "@%lu: leds[%2d] %u [%02x], %u [%02x], %u [%02x]\n",
+                  millis(), i, leds[i].R, leds[i].R, leds[i].G, leds[i].G, leds[i].B, leds[i].B);
   }
 
   hwLeds::setAnimator(singleFramer);

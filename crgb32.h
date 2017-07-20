@@ -1,6 +1,6 @@
 #pragma once
 
-#include <FastLED.h>
+#include "leds.h"
 
 // Representation of a 32 bit RGB pixel (Red, Green, Blue)
 struct CRGB32 {
@@ -47,16 +47,16 @@ struct CRGB32 {
 
   // allow construction from 8 bit CRGB
   inline CRGB32(const CRGB& rhs) __attribute__((always_inline))
-    : r(rhs.r<<8), g(rhs.g<<8), b(rhs.b<<8)
+    : r(rhs.R<<8), g(rhs.G<<8), b(rhs.B<<8)
   {
   }
 
   // allow assignment from 8 bit CRGB
   inline CRGB32& operator= (const CRGB& rhs) __attribute__((always_inline))
   {
-    r = rhs.r << 8;
-    g = rhs.g << 8;
-    b = rhs.b << 8;
+    r = rhs.R << 8;
+    g = rhs.G << 8;
+    b = rhs.B << 8;
     return *this;
   }
 

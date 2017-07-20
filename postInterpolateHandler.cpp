@@ -17,8 +17,8 @@ void PostInterpolateHandler::Handle(const char* path) {
   CRGB start(root["start"]["r"], root["start"]["g"], root["start"]["b"]);
   CRGB end(root["end"]["r"], root["end"]["g"], root["end"]["b"]);
 
-  Serial.printf("@%lu: start color %u [%02x], %u [%02x], %u [%02x]\n", millis(), start.r, start.r, start.g, start.g, start.b, start.b);
-  Serial.printf("@%lu: end color %u [%02x], %u [%02x], %u [%02x]\n", millis(), end.r, end.r, end.g, end.g, end.b, end.b);
+  Serial.printf("@%lu: start color %u [%02x], %u [%02x], %u [%02x]\n", millis(), start.R, start.R, start.G, start.G, start.B, start.B);
+  Serial.printf("@%lu: end color %u [%02x], %u [%02x], %u [%02x]\n", millis(), end.R, end.R, end.G, end.G, end.B, end.B);
   interpolater = interpolate::Interpolater(start, end);
   hwLeds::setAnimator(interpolater);
   client.send200();

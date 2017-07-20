@@ -7,8 +7,8 @@ void GetColorHandler::Handle(const char* path) {
   const size_t bufferSize = JSON_OBJECT_SIZE(3) + 30;
   DynamicJsonBuffer jsonBuffer(bufferSize);
   JsonObject& root = jsonBuffer.createObject();
-  root["r"]=color.r;
-  root["g"]=color.g;
-  root["b"]=color.b;
+  root["r"]=color.R;
+  root["g"]=color.G;
+  root["b"]=color.B;
   client.sendJSON(root);
 }

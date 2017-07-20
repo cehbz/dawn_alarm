@@ -15,7 +15,7 @@ void PostColorHandler::Handle(const char* path) {
   }
 
   const CRGB c(root["r"], root["g"], root["b"]);
-  Serial.printf("@%lu: color %u [%02x], %u [%02x], %u [%02x]\n", millis(), c.r, c.r, c.g, c.g, c.b, c.b);
+  Serial.printf("@%lu: color %u [%02x], %u [%02x], %u [%02x]\n", millis(), c.R, c.R, c.G, c.G, c.B, c.B);
   monochromer = singleColor::Monochromer(c);
   hwLeds::setAnimator(monochromer);
   client.send200();

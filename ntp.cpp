@@ -44,7 +44,7 @@ void digitalClockDisplay(){
                 hour(),
                 minute(),
                 second(),
-                timeZone);
+                timeZone);  Serial.flush();
 }
 
 WiFiUDP Udp;
@@ -82,7 +82,7 @@ time_t getTime() {
 }
 
 void gotNTPResponse() {
-  Serial.printf("@%lu: Receive NTP Response\n", millis()); Serial.flush();
+  Serial.printf("@%lu: Receive NTP Response\n", millis());
   ntpPacketSentMillis = 0;
   blink(3);
   Udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
@@ -98,7 +98,7 @@ void gotNTPResponse() {
   curTime = secsSince1900 - secsFrom1900ToUnixEpoch + timeZone * SECS_PER_HOUR;
   setTime(curTime);
   if (curTime-prevTime != 0) {
-    Serial.printf("Time adjusted  %+ld secs\n", curTime-prevTime) ;
+    Serial.printf("Time adjusted  %+ld secs\n", curTime-prevTime);
   }
   curTimeLastSetMillis = millis();
   digitalClockDisplay();
@@ -116,9 +116,32 @@ time_t getNTPTime()
 
   void lookupTimeServerByName(const char* name) {
     WiFi.hostByName(name, timeServer);
-    Serial.printf("NTP server %s at IP ", NTPServerName);
-    Serial.println(timeServer);
+    Serial.printf("NTP server %s at IP ", NTPServerName); Serial.println(timeServer);
   }
+
+time_t prevDisplay = 0; // when the digital clock was displayed
+
+  void loop()
+{
+  if (ntpPacketSentMillis == 0) { // no outstanding packet
+    if  (millis() - curTimeLastSetMillis < syncIntervalMillis) { // too soon after the last one
+      return;
+    }
+    Serial.printf("@%lu: NTP sync update\n", millis());
+    getNTPTime();
+    return;
+  }
+  if (millis() - ntpPacketSentMillis >= 1500) {
+    Serial.printf("@%lu: NTP packet timed out", millis());
+    getNTPTime();
+    return;
+  }
+  // ntpPacketSentMillis > 0 - we have an NTP packet in flight
+  if (Udp.parsePacket() >= NTP_PACKET_SIZE) {
+    gotNTPResponse();
+    return;
+  }
+}
 
 void setup()
 {
@@ -142,7 +165,7 @@ void setup()
     lookupTimeServerByName(NTPServerName);
     Udp.begin(localPort);
     syncIntervalMillis = 1000*SECS_PER_HOUR;
-    Serial.printf("@%d: Initial NTP Sync\n", millis());
+    Serial.printf("@%lu: Initial NTP Sync\n", millis());
     getNTPTime();
     // wait for first sync
     while (curTimeLastSetMillis == 0 && millis()-ntpSyncStartMillis < 10*1000) { // try this server for 10 seconds before trying a different one
@@ -151,30 +174,6 @@ void setup()
   }
   setSyncInterval(1*SECS_PER_HOUR);
   setSyncProvider(getTime);
-}
-
-time_t prevDisplay = 0; // when the digital clock was displayed
-
-void loop()
-{
-  if (ntpPacketSentMillis == 0) { // no outstanding packet
-    if  (millis() - curTimeLastSetMillis < syncIntervalMillis) { // too soon after the last one
-      return;
-    }
-    Serial.printf("@%d: NTP sync update\n", millis());
-    getNTPTime();
-    return;
-  }
-  if (millis() - ntpPacketSentMillis >= 1500) {
-    Serial.printf("@%d: NTP packet timed out", millis());
-    getNTPTime();
-    return;
-  }
-  // ntpPacketSentMillis > 0 - we have an NTP packet in flight
-  if (Udp.parsePacket() >= NTP_PACKET_SIZE) {
-    gotNTPResponse();
-    return;
-  }
 }
 
 /*-------- NTP code ----------*/

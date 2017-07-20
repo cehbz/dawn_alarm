@@ -1,8 +1,5 @@
 #pragma once
 
-// see if this helps the flicker
-#define FASTLED_INTERRUPT_RETRY_COUNT 1
-
 // #define DEBUG_DAWN
 
 #ifdef DEBUG_DAWN

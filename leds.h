@@ -1,7 +1,10 @@
 #pragma once
 
-#include <FastLED.h>
-#include "crgb16.h"
+#include <NeoPixelBus.h>
+
+#define neopixelbus
+
+typedef RgbwColor CRGB;
 
 class Animator {
 public:
@@ -11,9 +14,16 @@ public:
 
 class hwLeds {
 public:
-  // static const int NUM_LEDS = 30; // WS2812B
+#ifdef neopixelbus
+  static const int NUM_LEDS = 60; // Adafruit neopixel ring
+#endif
+#ifdef fastled
+  static const int NUM_LEDS = 30; // WS2812B
   // static const int NUM_LEDS = 60; // APA102
+#endif
+#ifdef pixie
   static const int NUM_LEDS = 3; // Adafruit Pixie
+#endif
   static const CRGB getColor();
   static const CRGB* getColors();
   static void setColor(const CRGB& color);
