@@ -18,18 +18,19 @@ uint16_t gamma16[256]; // initialised in setup
 const float GAMMA = 2.5f;
 // static const int DATA_PIN = 7; // D7, GPIO13, RXD2, HMOSI
 // static const int CLK_PIN = 5; // D5, GPIO14, HSCLK
+CRGB buf[leds::NUM_LEDS];
 #endif
 #ifdef pixie
 const float GAMMA = 1.0f; // pixies have 'built in' gamma correction
 Adafruit_Pixie strip = Adafruit_Pixie(leds::NUM_LEDS, &Serial1);
+CRGB buf[leds::NUM_LEDS];
 #endif
 #ifdef neopixelbus
 const float GAMMA = 2.5f;
 NeoPixelBus<NeoGrbwFeature, Neo800KbpsMethod> strip(leds::NUM_LEDS);
 #endif
-CRGB buf[leds::NUM_LEDS]; // TODO should be private to a hw specific class of some sort
 CRGB frame[leds::NUM_LEDS];
-bool frameUpdated = false;
+bool dirty = false;
 
 class LedsOff : public Animator {
 public:
@@ -62,14 +63,14 @@ void leds::setColors(const CRGB* b) {
   for (int i = 0; i<leds::NUM_LEDS; i++) {
     frame[i] = b[i];
   }
-  frameUpdated = true;
+  dirty = true;
 }
 
 void leds::setColor(const CRGB& color) {
   for (int i = 0; i<leds::NUM_LEDS; i++) {
     frame[i] = color;
   }
-  frameUpdated = true;
+  dirty = true;
 }
 
 class Error16 {
@@ -130,9 +131,13 @@ CRGB16 gammaCorrect(CRGB& c) {
 };
 
 void show() {
-  if (!frameUpdated) {
+  if (!dirty) {
     return;
   }
+#ifdef neopixelbus
+  CRGB* buf = (CRGB*)strip.Pixels();
+  strip.Dirty();
+#endif
   DEBUG_LEDS_PRINT("@%lu leds show()\n", millis());
   for (int i = 0; i<leds::NUM_LEDS; i++) {
     CRGB16 c(gammaCorrect(frame[i]));
@@ -153,6 +158,7 @@ void show() {
 #ifdef neopixelbus
   DEBUG_LEDS_PRINT("strip.Show()\n");
   strip.Show();
+  buf = NULL;
 #endif
 #ifdef pixie
   strip.show();
@@ -160,7 +166,7 @@ void show() {
 #ifdef fastled
   FastLED.show();
 #endif
-  frameUpdated = false;
+  dirty = false;
 }
 
 // void show() {
