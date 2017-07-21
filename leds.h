@@ -12,24 +12,23 @@ public:
   virtual void print() = 0;
 };
 
-class hwLeds {
-public:
+namespace leds {
 #ifdef neopixelbus
-  static const int NUM_LEDS = 60; // Adafruit neopixel ring
+  const int NUM_LEDS = 60; // Adafruit neopixel ring
 #endif
 #ifdef fastled
-  static const int NUM_LEDS = 30; // WS2812B
-  // static const int NUM_LEDS = 60; // APA102
+  const int NUM_LEDS = 30; // WS2812B
+  // const int NUM_LEDS = 60; // APA102
 #endif
 #ifdef pixie
-  static const int NUM_LEDS = 3; // Adafruit Pixie
+  const int NUM_LEDS = 3; // Adafruit Pixie
 #endif
-  static const CRGB getColor();
-  static const CRGB* getColors();
-  static void setColor(const CRGB& color);
-  static void setColors(const CRGB* leds);
-  static void setAnimator(Animator& animator);
+  const CRGB getColor();
+  const CRGB* getColors();
+  void setColor(const CRGB& color);
+  void setColors(const CRGB* leds);
+  void setAnimator(Animator& animator);
 
-  static void setup();
-  static void loop();
+  void setup();
+  void loop();
 };

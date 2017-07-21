@@ -9,14 +9,14 @@ void setup() {
   delay(250);
   Serial.println("\nbooted\n");
   ntp::setup();
-  hwLeds::setup();
-  HTTPServer::setup();
+  leds::setup();
+  HTTPserver::setup();
   alarmer::setup();
 }
 
 void loop() {
   ntp::loop();
-  hwLeds::loop();
-  HTTPServer::loop();
+  leds::loop();
+  HTTPserver::loop();
   alarmer::loop();
 }

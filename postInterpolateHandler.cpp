@@ -3,7 +3,7 @@
 #include "interpolate.h"
 
 void PostInterpolateHandler::Handle(const char* path) {
-  static interpolate::Interpolater interpolater(CRGB(0,0,0),CRGB(0,0,0));
+  static Interpolater interpolater(CRGB(0,0,0),CRGB(0,0,0));
   const size_t bufferSize = JSON_OBJECT_SIZE(2) + 2*JSON_OBJECT_SIZE(3) + 70;
   DynamicJsonBuffer jsonBuffer(bufferSize);
 
@@ -19,7 +19,7 @@ void PostInterpolateHandler::Handle(const char* path) {
 
   Serial.printf("@%lu: start color %u [%02x], %u [%02x], %u [%02x]\n", millis(), start.R, start.R, start.G, start.G, start.B, start.B);
   Serial.printf("@%lu: end color %u [%02x], %u [%02x], %u [%02x]\n", millis(), end.R, end.R, end.G, end.G, end.B, end.B);
-  interpolater = interpolate::Interpolater(start, end);
-  hwLeds::setAnimator(interpolater);
+  interpolater = Interpolater(start, end);
+  leds::setAnimator(interpolater);
   client.send200();
 }

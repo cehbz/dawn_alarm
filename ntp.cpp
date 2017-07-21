@@ -132,7 +132,6 @@ time_t prevDisplay = 0; // when the digital clock was displayed
     return;
   }
   if (millis() - ntpPacketSentMillis >= 1500) {
-    Serial.printf("@%lu: NTP packet timed out", millis());
     getNTPTime();
     return;
   }

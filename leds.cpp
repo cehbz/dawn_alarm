@@ -21,52 +21,52 @@ const float GAMMA = 2.5f;
 #endif
 #ifdef pixie
 const float GAMMA = 1.0f; // pixies have 'built in' gamma correction
-Adafruit_Pixie strip = Adafruit_Pixie(hwLeds::NUM_LEDS, &Serial1);
+Adafruit_Pixie strip = Adafruit_Pixie(leds::NUM_LEDS, &Serial1);
 #endif
 #ifdef neopixelbus
 const float GAMMA = 2.5f;
-NeoPixelBus<NeoGrbwFeature, Neo800KbpsMethod> strip(hwLeds::NUM_LEDS);
+NeoPixelBus<NeoGrbwFeature, Neo800KbpsMethod> strip(leds::NUM_LEDS);
 #endif
-CRGB leds[hwLeds::NUM_LEDS]; // TODO should be private to a hw specific class of some sort
-CRGB frame[hwLeds::NUM_LEDS];
+CRGB buf[leds::NUM_LEDS]; // TODO should be private to a hw specific class of some sort
+CRGB frame[leds::NUM_LEDS];
 bool frameUpdated = false;
 
 class LedsOff : public Animator {
 public:
-  void render() { hwLeds::setColor(CRGB(0,0,0));};
+  void render() { leds::setColor(CRGB(0,0,0));};
   void print() { Serial.print("LedsOff()"); }
 };
 static LedsOff ledsOff;
 Animator* animator = &ledsOff;
 
-const CRGB hwLeds::getColor() {
+const CRGB leds::getColor() {
   uint16_t r = 0;
   uint16_t g = 0;
   uint16_t b = 0;
-  for (int i = 0; i < hwLeds::NUM_LEDS; i++) {
+  for (int i = 0; i < leds::NUM_LEDS; i++) {
     r += frame[i].R;
     g += frame[i].G;
     b += frame[i].B;
   }
-  r = (r+hwLeds::NUM_LEDS/2)/hwLeds::NUM_LEDS;
-  g = (g+hwLeds::NUM_LEDS/2)/hwLeds::NUM_LEDS;
-  b = (b+hwLeds::NUM_LEDS/2)/hwLeds::NUM_LEDS;
+  r = (r+leds::NUM_LEDS/2)/leds::NUM_LEDS;
+  g = (g+leds::NUM_LEDS/2)/leds::NUM_LEDS;
+  b = (b+leds::NUM_LEDS/2)/leds::NUM_LEDS;
   return CRGB(r, g, b);
 }
 
-const CRGB* hwLeds::getColors() {
+const CRGB* leds::getColors() {
   return frame;
 }
 
-void hwLeds::setColors(const CRGB* b) {
-  for (int i = 0; i<hwLeds::NUM_LEDS; i++) {
+void leds::setColors(const CRGB* b) {
+  for (int i = 0; i<leds::NUM_LEDS; i++) {
     frame[i] = b[i];
   }
   frameUpdated = true;
 }
 
-void hwLeds::setColor(const CRGB& color) {
-  for (int i = 0; i<hwLeds::NUM_LEDS; i++) {
+void leds::setColor(const CRGB& color) {
+  for (int i = 0; i<leds::NUM_LEDS; i++) {
     frame[i] = color;
   }
   frameUpdated = true;
@@ -119,7 +119,7 @@ public:
   }
 };
 
-Error16 errors[hwLeds::NUM_LEDS];
+Error16 errors[leds::NUM_LEDS];
 // Error16 error(0,0,0);
 
 CRGB16 gammaCorrect(CRGB& c) {
@@ -134,21 +134,21 @@ void show() {
     return;
   }
   DEBUG_LEDS_PRINT("@%lu leds show()\n", millis());
-  for (int i = 0; i<hwLeds::NUM_LEDS; i++) {
+  for (int i = 0; i<leds::NUM_LEDS; i++) {
     CRGB16 c(gammaCorrect(frame[i]));
     DEBUG_LEDS_PRINT("c %04x,%04x,%04x", c.r, c.g, c.b);
     Error16 error = errors[i];
     DEBUG_LEDS_PRINT(", start error: %+4d, %+4d, %+4d ", error.r, error.g, error.b);
     c = error.correct(c);
-    leds[i] = c.CRGB16to8();
-    DEBUG_LEDS_PRINT(", led[%2d] %02x%02x%02x", i, leds[i].R, leds[i].G, leds[i].B);
-    error.update(c, leds[i]);
+    buf[i] = c.CRGB16to8();
+    DEBUG_LEDS_PRINT(", led[%2d] %02x%02x%02x", i, buf[i].R, buf[i].G, buf[i].B);
+    error.update(c, buf[i]);
     DEBUG_LEDS_PRINT(", end error: %+4d, %+4d, %+4d", error.r, error.g, error.b);
     errors[i] = error;
     DEBUG_LEDS_PRINT("\n");
   }
-  for (int i = 0; i < hwLeds::NUM_LEDS; i++) {
-    strip.SetPixelColor(i, leds[i]);
+  for (int i = 0; i < leds::NUM_LEDS; i++) {
+    strip.SetPixelColor(i, buf[i]);
   }
 #ifdef neopixelbus
   DEBUG_LEDS_PRINT("strip.Show()\n");
@@ -164,14 +164,14 @@ void show() {
 }
 
 // void show() {
-//   for (int i = 0; i<hwLeds::NUM_LEDS; i++) {
-//     leds[i] = frame[i].CRGB16to8();
+//   for (int i = 0; i<leds::NUM_LEDS; i++) {
+//     buf[i] = frame[i].CRGB16to8();
 //   }
 //   FastLED.show();
 //   FastLED.delay(0);
 // }
 
-void hwLeds::setAnimator(Animator& a) {
+void leds::setAnimator(Animator& a) {
   animator = &a;
 #ifdef DEBUG_ALARMER
   Serial.printf("@%d Animator  = ", millis()); a.print(); Serial.println();
@@ -181,7 +181,7 @@ void hwLeds::setAnimator(Animator& a) {
 uint32_t fpsEndTime;
 uint32_t frames;
 
-void hwLeds::setup() {
+void leds::setup() {
   for (int i = 0; i < 256; i++) {
     gamma16[i] = uint16_t(65535.0f*pow(i/255.0f, GAMMA)+0.5f);
   }
@@ -199,12 +199,12 @@ void hwLeds::setup() {
 #ifdef fastled
   FastLED.setMaxPowerInVoltsAndMilliamps(5, 4000); // external power brick
   // FastLED.setMaxPowerInVoltsAndMilliamps(5, 2000); // usb power
-  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, hwLeds::NUM_LEDS);
-  // FastLED.addLeds<APA102, DATA_PIN, CLK_PIN, RGB>(leds, hwLeds::NUM_LEDS);
+  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, leds::NUM_LEDS);
+  // FastLED.addLeds<APA102, DATA_PIN, CLK_PIN, RGB>(leds, leds::NUM_LEDS);
 #endif
 }
 
-void hwLeds::loop() {
+void leds::loop() {
   animator->render();
   show();
 #ifdef fastled

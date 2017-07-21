@@ -3,9 +3,9 @@
 #include "singleFramer.h"
 
 void PostColorsHandler::Handle(const char* path) {
-  static CRGB leds[hwLeds::NUM_LEDS];
+  static CRGB leds[leds::NUM_LEDS];
   static SingleFramer singleFramer(leds);
-  const size_t bufferSize = JSON_ARRAY_SIZE(hwLeds::NUM_LEDS) + hwLeds::NUM_LEDS*JSON_OBJECT_SIZE(3) + 30*hwLeds::NUM_LEDS;
+  const size_t bufferSize = JSON_ARRAY_SIZE(leds::NUM_LEDS) + leds::NUM_LEDS*JSON_OBJECT_SIZE(3) + 30*leds::NUM_LEDS;
   DynamicJsonBuffer jsonBuffer(bufferSize);
 
   JsonArray& root = jsonBuffer.parseArray(*(client.client));
@@ -15,7 +15,7 @@ void PostColorsHandler::Handle(const char* path) {
     return;
   }
 
-  for (int i = 0; i < hwLeds::NUM_LEDS; i++) {
+  for (int i = 0; i < leds::NUM_LEDS; i++) {
     const JsonObject& r = root[i];
     const CRGB c(r["r"], r["g"], r["b"]);
     leds[i] = c;
@@ -24,6 +24,6 @@ void PostColorsHandler::Handle(const char* path) {
                   millis(), i, leds[i].R, leds[i].R, leds[i].G, leds[i].G, leds[i].B, leds[i].B);
   }
 
-  hwLeds::setAnimator(singleFramer);
+  leds::setAnimator(singleFramer);
   client.send200();
 };

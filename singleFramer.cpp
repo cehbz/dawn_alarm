@@ -2,5 +2,5 @@
 #include "leds.h"
 
 void SingleFramer::render() {
-  hwLeds::setColors(leds);
+  leds::setColors(leds);
 };

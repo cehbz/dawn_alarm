@@ -102,7 +102,7 @@ void registerDynamicDNS() {
   Serial.println("dawn.ceh.bz registered");
 }
 
-void HTTPServer::setup() {
+void HTTPserver::setup() {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.printf("@%lu: PANIC connect WiFi before starting server!\n", millis());
     panic();
@@ -118,7 +118,7 @@ void HTTPServer::setup() {
   MDNS.addService("http", "tcp", 80);
 }
 
-void HTTPServer::loop() {
+void HTTPserver::loop() {
   // wait for a client
   if (!client) {
     client = server.available();
