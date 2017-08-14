@@ -35,10 +35,10 @@ void GetAlarmsHandler::Handle(const char* path) {
     sprintf(alarmTimes[dow-1], "%02lu:%02lu", numberOfHours(a), numberOfMinutes(a));
     root[alarmer::dayNames[dow-1]] = alarmTimes[dow-1];
   }
-  for ( int d = dowSunday; d <= dowSaturday; d++) {
+  for ( int d = dowSunday; d < dowSaturday; d++) {
     if (options::debug_http) Serial.printf("@%lu: [%d]", millis(), d);
     timeDayOfWeek_t dow = timeDayOfWeek_t(d);
-    if (!alarms[dow-1]) {
+    if (!alarms[dow]) {
       Serial.printf("missing alarm for %s\n", alarmer::dayNames[dow-1]);
       client.send500();
       return;
