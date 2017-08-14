@@ -1,48 +1,73 @@
 import React, { Component } from 'react';
-import * as d3color from 'd3-color';
-import { interpolate, setColor, setColors, NUM_LEDS } from './Utils';
-import { ShowColor } from './ShowColor';
+import { getOptions, setOptions } from './Utils';
 
 export default class Options extends Component {
-  state = {
-    startColor: d3color.rgb('#f19'),
-    endColor: d3color.rgb('#000'),
+  static stateChanged(oldState, newState) {
+    if (Object.keys(oldState).length !== Object.keys(newState).length) {
+      return true;
+    }
+    return Object.keys(oldState).reduce(
+      (acc, key) => acc || oldState[key] !== newState[key],
+      false
+    );
+  }
+
+  state = {};
+
+  componentWillMount = () => {
+    getOptions().then(options => {
+      this.setState(options);
+    });
   };
 
-  handleStartChange = color => {
-    this.state.startColor = color.rgb();
-    setColor(this.state.startColor);
-  };
-
-  handleEndChange = color => {
-    this.state.endColor = color.rgb();
-    if (
-      this.state.endColor.r !== this.state.startColor.r ||
-      this.state.endColor.g !== this.state.startColor.g ||
-      this.state.endColor.b !== this.state.startColor.b
-    ) {
-      interpolate(this.state.startColor, this.state.endColor);
+  componentDidUpdate = (_, prevState) => {
+    if (!Options.stateChanged(prevState, this.state)) {
       return;
     }
-    const colors = [];
-    for (let i = 0; i < NUM_LEDS; i += 1) {
-      colors[i] = this.state.endColor;
-    }
-    setColors(colors);
+    setOptions(this.state);
+  };
+
+  handleChange = event => {
+    const target = event.target;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
+    const name = target.name;
+
+    this.setState({
+      [name]: value,
+    });
   };
 
   render() {
+    const checkbox = key =>
+      <div key={key}>
+        <label htmlFor={key}>
+          <input
+            name={key}
+            type="checkbox"
+            onClick={this.handleChange}
+            checked={this.state[key]}
+          />
+          {key}
+        </label>
+        <br />
+      </div>;
+    const text = key =>
+      <div key={key}>
+        <label htmlFor={key}>
+          {key}
+          <input name={key} type="text" value={this.state[key]} readOnly />
+        </label>
+        <br />
+      </div>;
+    const options = () =>
+      Object.keys(this.state).map(key => {
+        if (typeof this.state[key] === 'boolean') return checkbox(key);
+        return text(key);
+      });
     return (
-      <div>
-        <ShowColor
-          color={this.state.startColor}
-          handleChange={this.handleStartChange}
-        />
-        <ShowColor
-          color={this.state.endColor}
-          handleChange={this.handleEndChange}
-        />
-      </div>
+      <form>
+        {options()}
+      </form>
     );
   }
 }

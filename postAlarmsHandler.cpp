@@ -46,6 +46,7 @@ void PostAlarmsHandler::Handle(const char* path) {
     const char *c = root[alarmer::dayNames[dow-1]];
     int h = s2toi(c);
     int m = s2toi(&c[3]);
+    Serial.printf("@%lu: alarm(%s, %02d:%02d)\n", millis(), alarmer::dayNames[dow-1], h, m);
     alarmer::SetAlarm(dow, h, m);
   }
   client.send200();

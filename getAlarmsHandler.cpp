@@ -1,6 +1,7 @@
 #include "getAlarmsHandler.h"
 #include <ArduinoJson.h>
 #include "alarmer.h"
+#include "options.h"
 
 void GetAlarmsHandler::Handle(const char* path) {
   const size_t bufferSize = JSON_OBJECT_SIZE(7) + 110;
@@ -15,12 +16,16 @@ void GetAlarmsHandler::Handle(const char* path) {
     alarms[dow] = false;
   }
   for (int i = 0; i < dtNBR_ALARMS; i++) {
-    Serial.printf("%d: %d\n", i, Alarm.readType(i));
-    if (Alarm.readType(i) != dtWeeklyAlarm) continue;
+    if (options::debug_http) Serial.printf("@%lu: alarms[%d] %s", millis(), i, alarmer::alarmPeriodNames[Alarm.readType(i)]);
+    if (Alarm.readType(i) != dtWeeklyAlarm) {
+      if (options::debug_http) Serial.println();
+      continue;
+    }
     auto a = Alarm.read(i);
-    Serial.printf("%2lu: %lu %02lu:%02lu", a, (dayOfWeek(a)+2)%7+1, numberOfHours(a), numberOfMinutes(a)); Serial.flush();
     auto dow = timeDayOfWeek_t((dayOfWeek(a)+2)%7+1);
-    Serial.printf(" %s\n", alarmer::dayNames[dow-1]); Serial.flush();
+    if (options::debug_http) Serial.printf(", %s %02lu:%02lu (%2lu, %lu)\n",
+                  alarmer::dayNames[dow-1], numberOfHours(a), numberOfMinutes(a),
+                  a, dow);
     if (alarms[dow]) {
       Serial.printf("duplicate alarm for %s\n", alarmer::dayNames[dow-1]);
       client.send500();
@@ -31,13 +36,15 @@ void GetAlarmsHandler::Handle(const char* path) {
     root[alarmer::dayNames[dow-1]] = alarmTimes[dow-1];
   }
   for ( int d = dowSunday; d <= dowSaturday; d++) {
+    if (options::debug_http) Serial.printf("@%lu: [%d]", millis(), d);
     timeDayOfWeek_t dow = timeDayOfWeek_t(d);
     if (!alarms[dow-1]) {
       Serial.printf("missing alarm for %s\n", alarmer::dayNames[dow-1]);
       client.send500();
       return;
     }
-    Serial.printf("\"%s\": \"%s\"\n", alarmer::dayNames[dow-1], root[alarmer::dayNames[dow-1]].as<const char *>());
+    if (options::debug_http) Serial.printf(" %s %s\n", alarmer::dayNames[dow-1], root[alarmer::dayNames[dow-1]].as<const char *>());
   }
+  if (options::debug_http) Serial.println();
   client.sendJSON(root);
 };

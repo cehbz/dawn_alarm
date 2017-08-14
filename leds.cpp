@@ -1,17 +1,8 @@
-#include "dawn_alarm.h"
 #include "leds.h"
-#include "alarmer.h" // to get DEBUG_ALARMER_PRINT
 #include <NeoPixelBus.h>
+#include "options.h"
 #include "crgb16.h"
 #include "crgb32.h"
-
-// #define DEBUG_LEDS
-
-#ifdef DEBUG_LEDS
-#define DEBUG_LEDS_PRINT(...) Serial.printf(__VA_ARGS__)
-#else
-#define DEBUG_LEDS_PRINT(...)
-#endif
 
 uint16_t gamma16[256]; // initialised in setup
 #ifdef fastled
@@ -91,18 +82,18 @@ public:
     if (c < 0) {
       error = c;
       component = 0;
-      DEBUG_LEDS_PRINT("<");
+      if (options::debug_leds) Serial.printf("<");
       return;
     }
     if (c > 65535) {
       error = c - 65535;
       component = 65535;
-      DEBUG_LEDS_PRINT(">");
+      if (options::debug_leds) Serial.printf(">");
       return;
     }
     error = 0;
     component = c;
-    DEBUG_LEDS_PRINT("=");
+    if (options::debug_leds) Serial.printf("=");
   }
 
   CRGB16  correct(CRGB16& c) {
@@ -138,25 +129,20 @@ void show() {
   CRGB* buf = (CRGB*)strip.Pixels();
   strip.Dirty();
 #endif
-  DEBUG_LEDS_PRINT("@%lu leds show()\n", millis());
+  if (options::debug_leds) Serial.printf("@%lu leds show()\n", millis());
   for (int i = 0; i<leds::NUM_LEDS; i++) {
-    CRGB16 c(gammaCorrect(frame[i]));
-    DEBUG_LEDS_PRINT("c %04x,%04x,%04x", c.r, c.g, c.b);
-    Error16 error = errors[i];
-    DEBUG_LEDS_PRINT(", start error: %+4d, %+4d, %+4d ", error.r, error.g, error.b);
+    CRGB16 c(gammaCorrect(frame[i]));	if (options::debug_leds) Serial.printf("c %04x,%04x,%04x", c.r, c.g, c.b);
+    Error16 error = errors[i];				if (options::debug_leds) Serial.printf(", start error: %+4d, %+4d, %+4d ", error.r, error.g, error.b);
     c = error.correct(c);
-    buf[i] = c.CRGB16to8();
-    DEBUG_LEDS_PRINT(", led[%2d] %02x%02x%02x", i, buf[i].R, buf[i].G, buf[i].B);
-    error.update(c, buf[i]);
-    DEBUG_LEDS_PRINT(", end error: %+4d, %+4d, %+4d", error.r, error.g, error.b);
-    errors[i] = error;
-    DEBUG_LEDS_PRINT("\n");
+    buf[i] = c.CRGB16to8();				if (options::debug_leds) Serial.printf(", led[%2d] %02x%02x%02x", i, buf[i].R, buf[i].G, buf[i].B);
+    error.update(c, buf[i]);				if (options::debug_leds) Serial.printf(", end error: %+4d, %+4d, %+4d", error.r, error.g, error.b);
+    errors[i] = error;						if (options::debug_leds) Serial.printf("\n");
   }
   for (int i = 0; i < leds::NUM_LEDS; i++) {
     strip.SetPixelColor(i, buf[i]);
   }
 #ifdef neopixelbus
-  DEBUG_LEDS_PRINT("strip.Show()\n");
+  if (options::debug_leds) Serial.printf("strip.Show()\n");
   strip.Show();
   buf = NULL;
 #endif
@@ -179,9 +165,7 @@ void show() {
 
 void leds::setAnimator(Animator& a) {
   animator = &a;
-#ifdef DEBUG_ALARMER
-  Serial.printf("@%d Animator  = ", millis()); a.print(); Serial.println();
-#endif
+  if (options::debug_alarmer) Serial.printf("@%d Animator  = ", millis()); a.print(); Serial.println();
 }
 
 uint32_t fpsEndTime;
@@ -218,7 +202,7 @@ void leds::loop() {
 #endif
   frames++;
   if (millis()>=fpsEndTime) {
-    DEBUG_PRINT("@%lu, %d fps\n", millis(), frames);
+    if (options::show_fps) Serial.printf("@%lu, %d fps\n", millis(), frames);
     fpsEndTime = millis()+1000;
     frames = 0;
   }

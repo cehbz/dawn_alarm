@@ -20,8 +20,8 @@ void PostColorsHandler::Handle(const char* path) {
     const CRGB c(r["r"], r["g"], r["b"]);
     leds[i] = c;
     Serial.printf(
-                  "@%lu: leds[%2d] %u [%02x], %u [%02x], %u [%02x]\n",
-                  millis(), i, leds[i].R, leds[i].R, leds[i].G, leds[i].G, leds[i].B, leds[i].B);
+                  "@%lu: leds[%2d] rgb(%u, %u, %u) #%02x%02x%02x\n",
+                  millis(), i, leds[i].R, leds[i].G, leds[i].B, leds[i].R, leds[i].G, leds[i].B);
   }
 
   leds::setAnimator(singleFramer);

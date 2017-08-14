@@ -3,7 +3,11 @@ import { rgb } from 'd3-color';
 import axios from 'axios';
 
 const BASE_URL = 'http://dawn.local';
-const NUM_LEDS = 60; // TODO set this via a query
+/* eslint-disable import/no-mutable-exports */
+let NUM_LEDS = 60; // TODO make this a getter
+/* eslint-enable import/no-mutable-exports */
+
+// TODO DRY up these get/set methods
 
 function getColor() {
   const url = `${BASE_URL}/color`;
@@ -101,6 +105,32 @@ function interpolate(startColor, endColor) {
   });
 }
 
+function getOptions() {
+  const url = `${BASE_URL}/options`;
+  return axios
+    .get(url, {})
+    .then(response => {
+      NUM_LEDS = response.data.num_leds;
+      return response.data;
+    })
+    .catch(() => undefined);
+}
+
+function setOptions(options) {
+  const url = `${BASE_URL}/options`;
+  return axios
+    .post(url, options)
+    .then(response => response.data)
+    .catch(error => {
+      /* eslint-disable no-console */
+      console.log(
+        `setOptions: error in axios.post('${url}', ${JSON.stringify(options)})`
+      );
+      console.log(error);
+      /* eslint-enable no-console */
+    });
+}
+
 export {
   BASE_URL,
   NUM_LEDS,
@@ -112,4 +142,6 @@ export {
   setColors,
   setGradient,
   interpolate,
+  getOptions,
+  setOptions,
 };

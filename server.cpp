@@ -1,15 +1,19 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 
+#include "options.h"
+
 #include "getRootHandler.h"
 #include "getColorHandler.h"
 #include "getColorsHandler.h"
 #include "getAlarmsHandler.h"
+#include "getOptionsHandler.h"
 
 #include "postColorHandler.h"
 #include "postColorsHandler.h"
 #include "postInterpolateHandler.h"
 #include "postAlarmsHandler.h"
+#include "postOptionsHandler.h"
 
 #include "optionsHandler.h"
 
@@ -29,22 +33,26 @@ GetRootHandler getRootHandler(&client);
 GetColorHandler getColorHandler(&client);
 GetColorsHandler getColorsHandler(&client);
 GetAlarmsHandler getAlarmsHandler(&client);
+GetOptionsHandler getOptionsHandler(&client);
 const Route getRoutes[] = {
   { "/", &getRootHandler},
   { "/color", &getColorHandler},
   { "/colors", &getColorsHandler},
   { "/alarms", &getAlarmsHandler},
+  { "/options", &getOptionsHandler},
 };
 
 PostColorHandler postColorHandler(&client);
 PostColorsHandler postColorsHandler(&client);
 PostInterpolateHandler postInterpolateHandler(&client);
 PostAlarmsHandler postAlarmsHandler(&client);
+PostOptionsHandler postOptionsHandler(&client);
 const Route postRoutes[] = {
   { "/color", &postColorHandler},
   { "/colors", &postColorsHandler},
   { "/interpolate", &postInterpolateHandler},
   { "/alarms", &postAlarmsHandler},
+  { "/options", &postOptionsHandler},
 };
 
 OptionsHandler optionsHandler(&client);
@@ -53,6 +61,7 @@ const Route optionsRoutes[] = {
   { "/colors", &optionsHandler},
   { "/interpolate", &optionsHandler},
   { "/alarms", &optionsHandler},
+  { "/options", &optionsHandler},
 };
 
 #define ARRAY_COUNT(a) (sizeof(a)/sizeof(a[0]))
@@ -147,13 +156,13 @@ void HTTPserver::loop() {
 
   String req = client.readStringUntil('\n');
   req.trim();
-  Serial.printf("@%lu: got request\n", millis());
-  Serial.println(req);
+  if (options::debug_http) Serial.printf("@%lu: got request\n", millis());
+  if (options::debug_http )Serial.println(req);
   String s;
   do {
     s = client.readStringUntil('\n');
     s.trim();
-    Serial.println(s);
+    if (options::debug_http) Serial.println(s);
   } while (s != "");
 
   // First line of HTTP request looks like "GET /path HTTP/1.1"
@@ -170,6 +179,7 @@ void HTTPserver::loop() {
   }
   const String request = req.substring(0, path_start);
   const String path = req.substring(path_start+1, path_end);
+  Serial.printf("@%lu: %s %s\n", millis(), request.c_str(), path.c_str());
   for (unsigned int i = 0; i < ARRAY_COUNT(methods); i++) {
     if (strcmp(methods[i].method, request.c_str()) != 0) continue;
     auto method = methods[i];

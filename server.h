@@ -1,6 +1,7 @@
 #pragma once
 #include <ESP8266WiFi.h>
 #include <ArduinoJson.h>
+#include "options.h"
 
 class HTTPClient {
 public:
@@ -25,11 +26,17 @@ public:
   }
 
   void sendJSON(JsonObject& root) {
+    if (options::debug_http) {
+      Serial.printf("@%lu: sendJSON(", millis()); root.printTo(Serial); Serial.println(")"); Serial.flush();
+    }
     sendJSON();
     root.printTo(*client);
   }
 
   void sendJSON(JsonArray& root) {
+    if (options::debug_http) {
+      Serial.printf("@%lu: sendJSON(", millis()); root.printTo(Serial); Serial.println(")"); Serial.flush();
+    }
     sendJSON();
     root.printTo(*client);
   }

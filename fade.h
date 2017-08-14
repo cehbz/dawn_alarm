@@ -2,14 +2,6 @@
 
 #include "leds.h"
 
-// #define DEBUG_FADE
-
-#ifdef DEBUG_FADE
-#define DEBUG_FADE_PRINT(...) Serial.printf(__VA_ARGS__)
-#else
-#define DEBUG_FADE_PRINT(...)
-#endif
-
 class ColorAtTime {
 public:
   float pos;
