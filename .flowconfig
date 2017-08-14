@@ -1,0 +1,13 @@
+[ignore]
+.*/node_modules/jasmine-enzyme/.*
+# .*/libdefs.js
+
+[include]
+
+[libs]
+# ./libdefs.js
+
+[lints]
+
+[options]
+all=true

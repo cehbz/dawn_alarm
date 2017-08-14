@@ -2086,9 +2086,10 @@ entities@^1.1.1, entities@~1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/entities/-/entities-1.1.1.tgz#6e5c2d0a5621b5dadaecef80b90edfb5cd7772f0"
 
-enzyme-matchers@^3.2.0:
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/enzyme-matchers/-/enzyme-matchers-3.2.0.tgz#4718779a3b9eb5e8ebad46804f8d3e66045d0181"
+
+enzyme-matchers@^3.2.0, enzyme-matchers@^3.3.0:
+  version "3.7.0"
+  resolved "https://registry.yarnpkg.com/enzyme-matchers/-/enzyme-matchers-3.7.0.tgz#3b683be7f1ab3429e21b47f7e97d4fb06da92662"
   dependencies:
     deep-equal-ident "^1.1.1"
 
@@ -2609,6 +2610,10 @@ flat-cache@^1.2.1:
 flatten@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/flatten/-/flatten-1.0.2.tgz#dae46a9d78fbe25292258cc1e780a41d95c03782"
+
+flow-bin@^0.52.0:
+  version "0.52.0"
+  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.52.0.tgz#b6d9abe8bcd1ee5c62df386451a4e2553cadc3a3"
 
 follow-redirects@^1.2.3:
   version "1.2.3"
