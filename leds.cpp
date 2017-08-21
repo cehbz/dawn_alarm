@@ -109,6 +109,52 @@ public:
     g += wanted.g-got16.g;
     b += wanted.b-got16.b;
   }
+
+  // plus
+  Error16& operator+=(const Error16& rhs)
+  {
+    (*this).r += rhs.r;
+    (*this).g += rhs.g;
+    (*this).b += rhs.b;
+    return *this;
+  }
+
+  friend Error16 operator+(Error16 lhs, const Error16& rhs)
+  {
+    lhs += rhs;
+    return lhs;
+  }
+
+  // minus
+  Error16& operator-=(const Error16& rhs)
+  {
+    (*this).r -= rhs.r;
+    (*this).g -= rhs.g;
+    (*this).b -= rhs.b;
+    return *this;
+  }
+
+  friend Error16 operator-(Error16 lhs, const Error16& rhs)
+  {
+    lhs -= rhs;
+    return lhs;
+  }
+
+  // divide by int
+  Error16& operator/=(const int& rhs)
+  {
+    (*this).r /= rhs;
+    (*this).g /= rhs;
+    (*this).b /= rhs;
+    return *this;
+  }
+
+  friend Error16 operator/(Error16& lhs, const int& rhs)
+  {
+    lhs /= rhs;
+    return lhs;
+  }
+
 };
 
 Error16 errors[leds::NUM_LEDS];
@@ -131,12 +177,17 @@ void show() {
 #endif
   if (options::debug_leds) Serial.printf("@%lu leds show()\n", millis());
   for (int i = 0; i<leds::NUM_LEDS; i++) {
-    CRGB16 c(gammaCorrect(frame[i]));	if (options::debug_leds) Serial.printf("c %04x,%04x,%04x", c.r, c.g, c.b);
-    Error16 error = errors[i];				if (options::debug_leds) Serial.printf(", start error: %+4d, %+4d, %+4d ", error.r, error.g, error.b);
+    if (options::debug_leds || options::debug_fade) Serial.printf("#%02x,%02x,%02x", frame[i].R, frame[i].G, frame[i].B);
+    CRGB16 c(gammaCorrect(frame[i]));	if (options::debug_leds) Serial.printf("->%04x,%04x,%04x", c.r, c.g, c.b);
+    Error16 error = errors[i];				if (options::debug_leds) Serial.printf(", err: %+4d, %+4d, %+4d ", error.r, error.g, error.b);
     c = error.correct(c);
     buf[i] = c.CRGB16to8();				if (options::debug_leds) Serial.printf(", led[%2d] %02x%02x%02x", i, buf[i].R, buf[i].G, buf[i].B);
-    error.update(c, buf[i]);				if (options::debug_leds) Serial.printf(", end error: %+4d, %+4d, %+4d", error.r, error.g, error.b);
-    errors[i] = error;						if (options::debug_leds) Serial.printf("\n");
+    error.update(c, buf[i]);					if (options::debug_leds || options::debug_fade) Serial.printf(", err: %+4d, %+4d, %+4d", error.r, error.g, error.b);
+    errors[(i+1) % leds::NUM_LEDS] += error/4;
+    errors[i] = error/2;;
+    errors[(i-1) % leds::NUM_LEDS] += (error-error/2-error/4);
+    // errors[i] = error;
+    if (options::debug_leds || options::debug_fade) Serial.printf("\n");
   }
   for (int i = 0; i < leds::NUM_LEDS; i++) {
     strip.SetPixelColor(i, buf[i]);
