@@ -16,7 +16,7 @@ void Fader::endFade(CRGB& endColor) {
 void Fader::render() {
   uint32_t t = millis() - fadeStartMillis;
   if (options::debug_fade || options::debug_alarmer) {
-    t *= 60;
+    t *= options::debug_speedup;
   }
   if (options::debug_fade) Serial.printf("t %u ", t);
   while (t > segEndMillis) {

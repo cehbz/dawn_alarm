@@ -1,6 +1,7 @@
 #pragma once
 
 #include "leds.h"
+#include "options.h"
 
 class ColorAtTime {
 public:

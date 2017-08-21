@@ -5,7 +5,7 @@
 #include "leds.h"
 
 void GetOptionsHandler::Handle(const char* path) {
-  const size_t bufferSize = JSON_OBJECT_SIZE(6) + 95;
+  const size_t bufferSize = JSON_OBJECT_SIZE(7) + 110;
   DynamicJsonBuffer jsonBuffer(bufferSize);
 
   JsonObject& root = jsonBuffer.createObject();
@@ -15,5 +15,6 @@ void GetOptionsHandler::Handle(const char* path) {
   root["debug_leds"] = options::debug_leds;
   root["num_leds"] = leds::NUM_LEDS;
   root["show_fps"] = options::show_fps;
+  root["debug_speedup"] = options::debug_speedup;
   client.sendJSON(root);
 };
