@@ -4,8 +4,36 @@
 
 namespace ntp {
 
-const char ssid[] = "Little Palmerston 2.4G";  //  your network SSID (name)
-const char pass[] = "littlepalmerstonst";       // your network password
+void blink(int count) {
+  for (int i = 0; i < count; i++) {
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(100);
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(100);
+  }
+  delay(500);
+}
+
+void wifiSetup () {
+  // static const char ssid[] = "Little Palmerston 2.4G";  //  your network SSID (name)
+  // static const char pass[] = "littlepalmerstonst";       // your network password
+  static const char ssid[] = "ii442C0Dprimary";
+  static const char pass[] = "7271b287";       // your network password
+  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  WiFi.begin(ssid, pass);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    blink(1);
+    Serial.print(".");
+  }
+
+  blink(2);
+  Serial.printf("\n@%lu: IP: ", millis()); Serial.print(WiFi.localIP()); Serial.printf(" RSSI (signal strength): %d dBm\n", WiFi.RSSI());
+}
+
 const char NTPServerName[] = "pool.ntp.org";
 
 // NTP Servers:
@@ -24,16 +52,6 @@ time_t curTime = 0;
 uint32_t curTimeLastSetMillis = 0;
 uint32_t ntpPacketSentMillis = 0;
 uint32_t syncIntervalMillis = 0;
-
-void blink(int count) {
-  for (int i = 0; i < count; i++) {
-    digitalWrite(LED_BUILTIN, LOW);
-    delay(100);
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(100);
-  }
-  delay(500);
-}
 
 void digitalClockDisplay(){
   // digital clock display of the time
@@ -144,19 +162,7 @@ time_t prevDisplay = 0; // when the digital clock was displayed
 
 void setup()
 {
-  pinMode(LED_BUILTIN, OUTPUT);
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, pass);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    blink(1);
-    Serial.print(".");
-  }
-
-  blink(2);
-  Serial.printf("\n@%lu: IP: ", millis()); Serial.print(WiFi.localIP()); Serial.printf(" RSSI (signal strength): %d dBm\n", WiFi.RSSI());
+  wifiSetup();
 
   time_t ntpSyncStartMillis = 0;
   while (curTimeLastSetMillis == 0) {
