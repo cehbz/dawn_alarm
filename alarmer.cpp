@@ -60,9 +60,9 @@ namespace alarmer {
     dowAlarms[dow] = Alarm.alarmRepeat(dow, h, m, 0, MorningAlarm);
   }
 
-  void setup() {
+    void setup() {
     if (options::debug_alarmer) {
-      Alarm.timerOnce(1, MorningAlarm);
+      MorningAlarm();
       return;
     }
     for ( int d = dowSunday; d <= dowSaturday; d++) {
@@ -70,10 +70,8 @@ namespace alarmer {
       switch (dow) {
       case dowSaturday:
       case dowSunday:
-        dowAlarms[dow] = Alarm.alarmRepeat(dow, 7, 0, 0, MorningAlarm);
-        break;
       case dowMonday:
-        dowAlarms[dow] = Alarm.alarmRepeat(dow, 4, 30, 0, MorningAlarm);
+        dowAlarms[dow] = Alarm.alarmRepeat(dow, 7, 0, 0, MorningAlarm);
         break;
       default:
         dowAlarms[dow] = Alarm.alarmRepeat(dow, 6, 0, 0, MorningAlarm);

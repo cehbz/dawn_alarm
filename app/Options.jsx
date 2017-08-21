@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { getOptions, setOptions } from './Utils';
+import { getOptions, setOptions, triggerAlarm } from './Utils';
 
 export default class Options extends Component {
   static stateChanged(oldState, newState) {

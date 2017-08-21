@@ -14,6 +14,7 @@
 #include "postInterpolateHandler.h"
 #include "postAlarmsHandler.h"
 #include "postOptionsHandler.h"
+#include "postTriggerAlarmHandler.h"
 
 #include "optionsHandler.h"
 
@@ -47,12 +48,14 @@ PostColorsHandler postColorsHandler(&client);
 PostInterpolateHandler postInterpolateHandler(&client);
 PostAlarmsHandler postAlarmsHandler(&client);
 PostOptionsHandler postOptionsHandler(&client);
+PostTriggerAlarmHandler postTriggerAlarmHandler(&client);
 const Route postRoutes[] = {
   { "/color", &postColorHandler},
   { "/colors", &postColorsHandler},
   { "/interpolate", &postInterpolateHandler},
   { "/alarms", &postAlarmsHandler},
   { "/options", &postOptionsHandler},
+  { "/triggerAlarm", &postTriggerAlarmHandler},  
 };
 
 OptionsHandler optionsHandler(&client);

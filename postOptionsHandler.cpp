@@ -3,7 +3,7 @@
 #include "options.h"
 
 void PostOptionsHandler::Handle(const char* path) {
-  const size_t bufferSize = JSON_OBJECT_SIZE(6) + 95;
+  const size_t bufferSize = JSON_OBJECT_SIZE(7) + 110;
   DynamicJsonBuffer jsonBuffer(bufferSize);
 
   JsonObject& root = jsonBuffer.parseObject(*(client.client));

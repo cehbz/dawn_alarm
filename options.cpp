@@ -6,5 +6,6 @@ namespace options {
   bool show_fps = false;
   bool debug_fade = false;
   bool debug_leds = false;
-  bool debug_http = true;
+  bool debug_http = false;
+  uint8_t debug_speedup = 60;
 }

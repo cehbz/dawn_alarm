@@ -131,6 +131,16 @@ function setOptions(options) {
     });
 }
 
+function triggerAlarm() {
+  const url = `${BASE_URL}/triggerAlarm`;
+  return axios.post(url).then(response => response.data).catch(error => {
+    /* eslint-disable no-console */
+    console.log(`triggerAlarm: error in axios.post('${url}')`);
+    console.log(error);
+    /* eslint-enable no-console */
+  });
+}
+
 export {
   BASE_URL,
   NUM_LEDS,
@@ -144,4 +154,5 @@ export {
   interpolate,
   getOptions,
   setOptions,
+  triggerAlarm,
 };
