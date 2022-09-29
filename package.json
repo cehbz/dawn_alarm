@@ -17,7 +17,7 @@
   "author": "",
   "dependencies": {
     "axios": "^0.21.1",
-    "d3-color": "^1.0.3",
+    "d3-color": "^3.1.0",
     "d3-interpolate": "^1.1.5",
     "d3-scale": "^1.0.6",
     "enzyme-matchers": "^3.3.0",
